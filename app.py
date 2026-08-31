@@ -15,7 +15,8 @@ LEAGUE_ID = 135
 SEASON = 2026
 
 def get_api_headers(key):
-    return {'x-rapidapi-host': "v3.football.api-sports.io", 'x-rapidapi-key': key}
+    return {'x-apisports-key': key}
+
 
 def fetch_today_fixtures(key):
     url = f"https://v3.football.api-sports.io/fixtures?league={LEAGUE_ID}&season={SEASON}&next=10"
