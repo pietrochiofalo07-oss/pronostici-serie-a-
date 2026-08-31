@@ -7,9 +7,8 @@ st.set_page_config(page_title="Europe Football AI Predictor", page_icon="⚽", l
 st.title("⚽ Europe Football AI Predictor")
 st.caption("Modello predittivo avanzato: 1X2, Risultati Esatti e Marcatori per tutti i campionati europei.")
 
-# Database Campionati Europei e Squadre (Attacco, Difesa)
 FOOTBALL_DATABASE = {
-    "🇮🇹 Serie A": {
+    "Serie A": {
         "Inter": {"att": 88, "def": 85, "strikers": ["Lautaro Martínez", "Marcus Thuram", "Hakan Çalhanoğlu"]},
         "Juventus": {"att": 82, "def": 86, "strikers": ["Dušan Vlahović", "Kenan Yıldız", "Teun Koopmeiners"]},
         "Milan": {"att": 84, "def": 80, "strikers": ["Álvaro Morata", "Rafael Leão", "Christian Pulisic"]},
@@ -31,7 +30,7 @@ FOOTBALL_DATABASE = {
         "Como": {"att": 71, "def": 69, "strikers": ["Patrick Cutrone", "Andrea Belotti", "Nico Paz"]},
         "Venezia": {"att": 67, "def": 67, "strikers": ["Joel Pohjanpalo", "Gaetano Oristanio", "Christian Gytkjær"]}
     },
-    "🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League": {
+    "Premier League": {
         "Manchester City": {"att": 93, "def": 87, "strikers": ["Erling Haaland", "Phil Foden", "Kevin De Bruyne"]},
         "Arsenal": {"att": 89, "def": 88, "strikers": ["Kai Havertz", "Bukayo Saka", "Gabriel Martinelli"]},
         "Liverpool": {"att": 90, "def": 84, "strikers": ["Mohamed Salah", "Darwin Núñez", "Luis Díaz"]},
@@ -43,7 +42,7 @@ FOOTBALL_DATABASE = {
         "West Ham": {"att": 78, "def": 76, "strikers": ["Michail Antonio", "Jarrod Bowen", "Lucas Paquetá"]},
         "Brighton": {"att": 80, "def": 75, "strikers": ["Danny Welbeck", "Kaoru Mitoma", "Evan Ferguson"]}
     },
-    "🇪🇸 LaLiga": {
+    "LaLiga": {
         "Real Madrid": {"att": 94, "def": 88, "strikers": ["Kylian Mbappé", "Vinícius Jr.", "Jude Bellingham"]},
         "Barcelona": {"att": 90, "def": 82, "strikers": ["Robert Lewandowski", "Lamine Yamal", "Raphinha"]},
         "Atlético Madrid": {"att": 85, "def": 86, "strikers": ["Julian Alvarez", "Antoine Griezmann", "Alexander Sørloth"]},
@@ -53,21 +52,21 @@ FOOTBALL_DATABASE = {
         "Villarreal": {"att": 81, "def": 75, "strikers": ["Ayoze Pérez", "Thierno Barry", "Álex Baena"]},
         "Real Betis": {"att": 77, "def": 78, "strikers": ["Vitor Roque", "Giovani Lo Celso", "Ezequiel Ávila"]}
     },
-    "🇩🇪 Bundesliga": {
+    "Bundesliga": {
         "Bayern Monaco": {"att": 91, "def": 84, "strikers": ["Harry Kane", "Jamal Musiala", "Michael Olise"]},
         "Bayer Leverkusen": {"att": 89, "def": 83, "strikers": ["Victor Boniface", "Florian Wirtz", "Patrik Schick"]},
         "RB Lipsia": {"att": 84, "def": 81, "strikers": ["Benjamin Šeško", "Loïs Openda", "Xavi Simons"]},
         "Borussia Dortmund": {"att": 85, "def": 79, "strikers": ["Serhou Guirassy", "Donyell Malen", "Julian Brandt"]},
         "Eintracht Francoforte": {"att": 82, "def": 76, "strikers": ["Omar Marmoush", "Hugo Ekitike", "Mario Götze"]}
     },
-    "🇫🇷 Ligue 1": {
+    "Ligue 1": {
         "PSG": {"att": 88, "def": 83, "strikers": ["Ousmane Dembélé", "Bradley Barcola", "Randal Kolo Muani"]},
         "Monaco": {"att": 82, "def": 78, "strikers": ["Folarin Balogun", "Breel Embolo", "Takumi Minamino"]},
         "Lilla": {"att": 80, "def": 79, "strikers": ["Jonathan David", "Edon Zhegrova", "Rémy Cabella"]},
         "Marsiglia": {"att": 83, "def": 77, "strikers": ["Elye Wahi", "Mason Greenwood", "Amine Harit"]},
         "Lione": {"att": 79, "def": 75, "strikers": ["Alexandre Lacazette", "Georges Mikautadze", "Said Benrahma"]}
     },
-    "🏆 Champions League / Coppe Europee": {
+    "Champions League / Coppe Europee": {
         "Real Madrid": {"att": 94, "def": 88, "strikers": ["Kylian Mbappé", "Vinícius Jr.", "Jude Bellingham"]},
         "Manchester City": {"att": 93, "def": 87, "strikers": ["Erling Haaland", "Phil Foden", "Kevin De Bruyne"]},
         "Bayern Monaco": {"att": 91, "def": 84, "strikers": ["Harry Kane", "Jamal Musiala", "Michael Olise"]},
@@ -83,7 +82,6 @@ FOOTBALL_DATABASE = {
     }
 }
 
-# Seleziona Campionato
 league = st.selectbox("🌍 Seleziona Competizione / Campionato:", list(FOOTBALL_DATABASE.keys()))
 teams_list = sorted(list(FOOTBALL_DATABASE[league].keys()))
 
@@ -103,11 +101,9 @@ else:
         h_data = FOOTBALL_DATABASE[league][home_team]
         a_data = FOOTBALL_DATABASE[league][away_team]
         
-        # Calcolo Expected Goals (xG)
         home_xg = 1.35 * (h_data["att"] / 75.0) * (75.0 / a_data["def"])
         away_xg = 1.05 * (a_data["att"] / 75.0) * (75.0 / h_data["def"])
         
-        # Matrice di Poisson
         max_goals = 6
         prob_matrix = np.zeros((max_goals, max_goals))
         exact_scores = []
@@ -122,7 +118,6 @@ else:
         draw = float(np.sum(np.diag(prob_matrix))) * 100
         away_win = float(np.sum(np.triu(prob_matrix, 1))) * 100
 
-        # Esito 1X2
         st.markdown("---")
         st.write(f"### 📊 Esito 1X2 & xG per **{home_team} vs {away_team}**")
         m1, m2, m3 = st.columns(3)
@@ -131,7 +126,6 @@ else:
         m3.metric(f"Vittoria {away_team} (2)", f"{round(away_win, 1)}%")
         st.info(f"⚽ **Expected Goals (xG):** {home_team} **{round(home_xg, 2)}** - **{round(away_xg, 2)}** {away_team}")
 
-        # Risultati Esatti Top 5
         st.markdown("---")
         st.write("### 🎯 Risultati Esatti Più Probabili")
         exact_scores.sort(key=lambda x: x[1], reverse=True)
@@ -141,13 +135,10 @@ else:
         for idx, (score, prob) in enumerate(top5_scores):
             cols[idx].metric(f"Risultato {score}", f"{round(prob, 1)}%")
 
-        # Marcatori Consigliati
         st.markdown("---")
         st.write("### ⚽ Probabilità Marcatori Calcolate dall'IA")
         
         c_home, c_away = st.columns(2)
-        
-        # Pesi quota marcatore: P1 (42%), P2 (30%), P3 (20%)
         weights = [0.42, 0.30, 0.20]
         
         with c_home:
