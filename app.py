@@ -3,46 +3,96 @@ import numpy as np
 from scipy.stats import poisson
 
 st.set_page_config(
-    page_title="Europe Football AI Predictor", 
-    page_icon="⚽", 
+    page_title="EUROPE AI PREDICTOR 2027", 
+    page_icon="⚡", 
     layout="wide"
 )
 
-# --- CSS PERSONALIZZATO PER LA GRAFICA ---
+# --- CSS FUTURISTICO AVANZATO (NEON & GLASSMORPHISM) ---
 st.markdown("""
     <style>
-    /* Stile generale e sfondo carte */
-    .metric-card {
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-        border: 1px solid #334155;
-        border-radius: 12px;
-        padding: 16px;
+    /* Sfondo globale e font */
+    .main {
+        background: radial-gradient(circle at top left, #0d1117, #010409) !important;
+    }
+    
+    /* Titolo Cyberpunk */
+    .cyber-title {
+        font-family: 'Segoe UI', Roboto, sans-serif;
+        font-size: 2.6rem;
+        font-weight: 900;
         text-align: center;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        background: linear-gradient(90deg, #00f2fe 0%, #4facfe 50%, #00c6ff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
+        margin-bottom: 5px;
+        letter-spacing: 1px;
     }
-    .metric-title {
-        color: #94a3b8;
-        font-size: 0.9rem;
-        font-weight: 600;
-        margin-bottom: 6px;
+    
+    .cyber-subtitle {
+        text-align: center;
+        color: #8b949e;
+        font-size: 0.95rem;
+        margin-bottom: 35px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
     }
-    .metric-value {
-        color: #38bdf8;
-        font-size: 1.8rem;
+
+    /* Carte percentuali 1X2 Neon */
+    .neon-card {
+        background: rgba(22, 27, 34, 0.7);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 24px 15px;
+        text-align: center;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        transition: all 0.3s ease;
+    }
+    .neon-card-1 { border: 1px solid #00f2fe; box-shadow: 0 0 15px rgba(0, 242, 254, 0.2); }
+    .neon-card-x { border: 1px solid #ffb703; box-shadow: 0 0 15px rgba(255, 183, 3, 0.2); }
+    .neon-card-2 { border: 1px solid #ff007f; box-shadow: 0 0 15px rgba(255, 0, 127, 0.2); }
+
+    .neon-label {
+        font-size: 0.85rem;
         font-weight: 700;
-    }
-    .score-card {
-        background: #1e293b;
-        border-left: 4px solid #38bdf8;
-        border-radius: 8px;
-        padding: 10px 14px;
+        letter-spacing: 1.5px;
+        color: #8b949e;
         margin-bottom: 8px;
+    }
+    
+    .neon-val-1 { color: #00f2fe; font-size: 2.2rem; font-weight: 900; text-shadow: 0 0 10px rgba(0, 242, 254, 0.5); }
+    .neon-val-x { color: #ffb703; font-size: 2.2rem; font-weight: 900; text-shadow: 0 0 10px rgba(255, 183, 3, 0.5); }
+    .neon-val-2 { color: #ff007f; font-size: 2.2rem; font-weight: 900; text-shadow: 0 0 10px rgba(255, 0, 127, 0.5); }
+
+    /* Carte Risultati Esatti */
+    .score-badge {
+        background: rgba(30, 41, 59, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-left: 4px solid #00f2fe;
+        border-radius: 10px;
+        padding: 12px;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+    
+    /* Box xG */
+    .xg-box {
+        background: linear-gradient(90deg, rgba(0,242,254,0.1) 0%, rgba(255,0,127,0.1) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 12px;
+        padding: 15px;
+        text-align: center;
+        font-size: 1.1rem;
+        color: #f0f6fc;
+        margin-top: 25px;
     }
     </style>
 """, unsafe_allow_html=True)
 
-st.title("⚽ Europe Football AI Predictor Pro")
-st.caption("Modello di analisi predittiva avanzato | Stagione 2026/2027")
+# Headings Stilizzati
+st.markdown('<div class="cyber-title">⚡ EUROPE FOOTBALL AI PREDICTOR</div>', unsafe_allow_html=True)
+st.markdown('<div class="cyber-subtitle">MODELLO ALGORITMICO AVANZATO • SEASON 2026/2027</div>', unsafe_allow_html=True)
 
 FOOTBALL_DATABASE = {
     "Serie A": {
@@ -153,20 +203,20 @@ FOOTBALL_DATABASE = {
     }
 }
 
-# --- SELEZIONE COMPETIZIONE E SQUADRE ---
-league = st.selectbox("🌍 Campionato", list(FOOTBALL_DATABASE.keys()))
+# Selettori Squadre
+league = st.selectbox("🌐 Seleziona Campionato", list(FOOTBALL_DATABASE.keys()))
 teams_list = sorted(list(FOOTBALL_DATABASE[league].keys()))
 
 c1, c2 = st.columns(2)
 with c1:
-    home_team = st.selectbox("🏠 Squadra Casa (1)", teams_list, index=0)
+    home_team = st.selectbox("🏠 Squadra di Casa", teams_list, index=0)
 with c2:
-    away_team = st.selectbox("✈️ Squadra Trasferta (2)", teams_list, index=1 if len(teams_list) > 1 else 0)
+    away_team = st.selectbox("✈️ Squadra Ospite", teams_list, index=1 if len(teams_list) > 1 else 0)
 
 if home_team == away_team:
-    st.warning("⚠️ Seleziona due squadre diverse per procedere.")
+    st.warning("⚠️ Seleziona due squadre diverse.")
 else:
-    if st.button("⚡ Genera Analisi & Pronostico", type="primary", use_container_width=True):
+    if st.button("🚀 AVVIA SIMULAZIONE IA", type="primary", use_container_width=True):
         h_data = FOOTBALL_DATABASE[league][home_team]
         a_data = FOOTBALL_DATABASE[league][away_team]
         
@@ -188,38 +238,46 @@ else:
         away_win = float(np.sum(np.triu(prob_matrix, 1))) * 100
 
         st.markdown("<br>", unsafe_allow_html=True)
-        st.subheader(f"📊 Probabilità 1X2 | {home_team} vs {away_team}")
         
-        # Schede grafiche 1X2
+        # Schede Neon 1X2
         col_1, col_x, col_2 = st.columns(3)
         with col_1:
             st.markdown(f"""
-                <div class="metric-card">
-                    <div class="metric-title">VITTORIA CASA (1)</div>
-                    <div class="metric-value">{round(home_win, 1)}%</div>
+                <div class="neon-card neon-card-1">
+                    <div class="neon-label">VITTORIA CASA (1)</div>
+                    <div class="neon-val-1">{round(home_win, 1)}%</div>
+                    <div style="color: #00f2fe; font-size: 0.8rem; margin-top:5px;">{home_team}</div>
                 </div>
             """, unsafe_allow_html=True)
         with col_x:
             st.markdown(f"""
-                <div class="metric-card">
-                    <div class="metric-title">PAREGGIO (X)</div>
-                    <div class="metric-value">{round(draw, 1)}%</div>
+                <div class="neon-card neon-card-x">
+                    <div class="neon-label">PAREGGIO (X)</div>
+                    <div class="neon-val-x">{round(draw, 1)}%</div>
+                    <div style="color: #ffb703; font-size: 0.8rem; margin-top:5px;">EQ. MATEMATICA</div>
                 </div>
             """, unsafe_allow_html=True)
         with col_2:
             st.markdown(f"""
-                <div class="metric-card">
-                    <div class="metric-title">VITTORIA TRASFERTA (2)</div>
-                    <div class="metric-value">{round(away_win, 1)}%</div>
+                <div class="neon-card neon-card-2">
+                    <div class="neon-label">VITTORIA TRASFERTA (2)</div>
+                    <div class="neon-val-2">{round(away_win, 1)}%</div>
+                    <div style="color: #ff007f; font-size: 0.8rem; margin-top:5px;">{away_team}</div>
                 </div>
             """, unsafe_allow_html=True)
 
-        st.info(f"⚽ **Expected Goals (xG Stimati):** {home_team} **{round(home_xg, 2)}** — **{round(away_xg, 2)}** {away_team}")
+        # Expected Goals Box
+        st.markdown(f"""
+            <div class="xg-box">
+                ⚽ Expected Goals (xG) Calcolati: 
+                <strong style="color: #00f2fe;">{home_team} {round(home_xg, 2)}</strong> — 
+                <strong style="color: #ff007f;">{round(away_xg, 2)} {away_team}</strong>
+            </div>
+        """, unsafe_allow_html=True)
 
-        st.markdown("---")
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.subheader("🎯 Risultati Esatti più Probabili")
         
-        # Risultati Esatti Top 5 Stilizzati
-        st.subheader("🎯 Risultati Esatti Più Probabili")
         exact_scores.sort(key=lambda x: x[1], reverse=True)
         top5 = exact_scores[:5]
         
@@ -227,17 +285,16 @@ else:
         for idx, (score, prob) in enumerate(top5):
             with res_cols[idx]:
                 st.markdown(f"""
-                    <div class="score-card">
-                        <span style="color: #94a3b8; font-size: 0.8rem;"># {idx+1} Opzione</span><br>
-                        <strong style="color: #f8fafc; font-size: 1.3rem;">{score}</strong><br>
-                        <span style="color: #38bdf8; font-weight: bold;">{round(prob, 1)}%</span>
+                    <div class="score-badge">
+                        <span style="color: #8b949e; font-size: 0.75rem;">RANK #{idx+1}</span><br>
+                        <strong style="color: #ffffff; font-size: 1.4rem;">{score}</strong><br>
+                        <span style="color: #00f2fe; font-weight: bold;">{round(prob, 1)}%</span>
                     </div>
                 """, unsafe_allow_html=True)
 
-        st.markdown("---")
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.subheader("⚽ Probabilità Marcatori IA")
         
-        # Marcatori con Barre di Progresso Visuali
-        st.subheader("⚽ Probabilità Marcatori")
         m_col1, m_col2 = st.columns(2)
         weights = [0.44, 0.32, 0.22]
         
@@ -245,18 +302,17 @@ else:
             st.write(f"**Marcatori {home_team}:**")
             for idx, player in enumerate(h_data["strikers"]):
                 prob_scorer = min(round(weights[idx] * (home_xg / 1.35) * 100, 1), 82.0)
-                st.write(f"👤 **{player}** ({prob_scorer}%)")
+                st.write(f"👤 **{player}** — `{prob_scorer}%`")
                 st.progress(prob_scorer / 100)
                 
         with m_col2:
             st.write(f"**Marcatori {away_team}:**")
             for idx, player in enumerate(a_data["strikers"]):
                 prob_scorer = min(round(weights[idx] * (away_xg / 1.05) * 100, 1), 82.0)
-                st.write(f"👤 **{player}** ({prob_scorer}%)")
+                st.write(f"👤 **{player}** — `{prob_scorer}%`")
                 st.progress(prob_scorer / 100)
 
-        # Tabella completa espandibile
-        with st.expander("📋 Mostra Matrice Completa di Tutti i Punteggi Possibili"):
+        with st.expander("📋 Tabella Completa Risultati (Tutte le Combinazioni 0-0 fino a 5-5)"):
             st.dataframe(
                 np.round(prob_matrix * 100, 1),
                 column_config={i: f"Ospiti: {i} gol" for i in range(max_goals)},
