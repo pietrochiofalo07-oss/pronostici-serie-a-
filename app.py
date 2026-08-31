@@ -4,10 +4,10 @@ from scipy.stats import poisson
 
 st.set_page_config(page_title="Europe Football AI Predictor", page_icon="⚽", layout="wide")
 
-st.title("⚽ Europe Football AI Predictor (2026-2027)")
-st.caption("Modello predittivo aggiornato con il calciomercato ufficiale 2026/2027.")
+st.title("⚽ Europe Football AI Predictor (Stagione 2026-2027)")
+st.caption("Modello predittivo aggiornato con rose verificate e dati ufficiali 2026/2027.")
 
-# Database aggiornato al mercato estivo 2026 (Transfermarkt / Fabrizio Romano)
+# Database accurato basato su Transfermarkt (Stagione 2026/2027)
 FOOTBALL_DATABASE = {
     "Serie A": {
         "Inter": {
@@ -15,8 +15,8 @@ FOOTBALL_DATABASE = {
             "strikers": ["Lautaro Martínez", "Marcus Thuram", "Hakan Çalhanoğlu"]
         },
         "Juventus": {
-            "att": 83, "def": 87, 
-            "strikers": ["Kenan Yıldız", "Teun Koopmeiners", "Timothy Weah"]
+            "att": 86, "def": 87, 
+            "strikers": ["Jonathan David", "Loïs Openda", "Kenan Yıldız"]
         },
         "Milan": {
             "att": 84, "def": 81, 
@@ -110,7 +110,7 @@ FOOTBALL_DATABASE = {
         },
         "Tottenham": {
             "att": 85, "def": 79, 
-            "strikers": ["Son Heung-min", "Dominic Solanke", "James Maddison"]
+            "strikers": ["Dejan Kulusevski", "Dominic Solanke", "James Maddison"]
         },
         "Chelsea": {
             "att": 84, "def": 78, 
@@ -121,8 +121,8 @@ FOOTBALL_DATABASE = {
             "strikers": ["Joshua Zirkzee", "Marcus Rashford", "Bruno Fernandes"]
         },
         "Newcastle": {
-            "att": 83, "def": 80, 
-            "strikers": ["Alexander Isak", "Anthony Gordon", "Harvey Barnes"]
+            "att": 84, "def": 80, 
+            "strikers": ["Alexander Isak", "Nick Woltemade", "Anthony Gordon"]
         }
     },
     "LaLiga": {
@@ -166,13 +166,13 @@ FOOTBALL_DATABASE = {
             "att": 92, "def": 85, 
             "strikers": ["Khvicha Kvaratskhelia", "Ousmane Dembélé", "Gonçalo Ramos"]
         },
+        "Marsiglia": {
+            "att": 84, "def": 78, 
+            "strikers": ["Timothy Weah", "Mason Greenwood", "Elye Wahi"]
+        },
         "Monaco": {
             "att": 83, "def": 79, 
             "strikers": ["Folarin Balogun", "Breel Embolo", "Takumi Minamino"]
-        },
-        "Marsiglia": {
-            "att": 84, "def": 78, 
-            "strikers": ["Mason Greenwood", "Elye Wahi", "Amine Harit"]
         },
         "Lilla": {
             "att": 81, "def": 80, 
