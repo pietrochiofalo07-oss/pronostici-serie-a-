@@ -11,12 +11,10 @@ st.set_page_config(
 # --- CSS FUTURISTICO AVANZATO (NEON & GLASSMORPHISM) ---
 st.markdown("""
     <style>
-    /* Sfondo globale e font */
     .main {
         background: radial-gradient(circle at top left, #0d1117, #010409) !important;
     }
     
-    /* Titolo Cyberpunk */
     .cyber-title {
         font-family: 'Segoe UI', Roboto, sans-serif;
         font-size: 2.6rem;
@@ -39,7 +37,6 @@ st.markdown("""
         text-transform: uppercase;
     }
 
-    /* Carte percentuali 1X2 Neon */
     .neon-card {
         background: rgba(22, 27, 34, 0.7);
         backdrop-filter: blur(10px);
@@ -65,7 +62,6 @@ st.markdown("""
     .neon-val-x { color: #ffb703; font-size: 2.2rem; font-weight: 900; text-shadow: 0 0 10px rgba(255, 183, 3, 0.5); }
     .neon-val-2 { color: #ff007f; font-size: 2.2rem; font-weight: 900; text-shadow: 0 0 10px rgba(255, 0, 127, 0.5); }
 
-    /* Carte Risultati Esatti */
     .score-badge {
         background: rgba(30, 41, 59, 0.8);
         border: 1px solid rgba(255, 255, 255, 0.1);
@@ -75,8 +71,16 @@ st.markdown("""
         margin-bottom: 10px;
         text-align: center;
     }
+
+    .bet-card {
+        background: rgba(22, 27, 34, 0.8);
+        border: 1px solid rgba(0, 242, 254, 0.3);
+        border-radius: 12px;
+        padding: 12px;
+        text-align: center;
+        margin-bottom: 10px;
+    }
     
-    /* Box xG */
     .xg-box {
         background: linear-gradient(90deg, rgba(0,242,254,0.1) 0%, rgba(255,0,127,0.1) 100%);
         border: 1px solid rgba(255, 255, 255, 0.15);
@@ -90,120 +94,60 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Headings Stilizzati
 st.markdown('<div class="cyber-title">⚡ EUROPE FOOTBALL AI PREDICTOR</div>', unsafe_allow_html=True)
-st.markdown('<div class="cyber-subtitle">MODELLO ALGORITMICO AVANZATO • SEASON 2026/2027</div>', unsafe_allow_html=True)
+st.markdown('<div class="cyber-subtitle">MODELLO ALGORITMICO AVANZATO • EUROPEAN LEAGUES 2026/2027</div>', unsafe_allow_html=True)
 
 FOOTBALL_DATABASE = {
     "Serie A": {
-        "Inter": {"att": 91, "def": 89, "strikers": ["Lautaro Martínez", "Marcus Thuram", "Mehdi Taremi"]},
-        "Juventus": {"att": 87, "def": 88, "strikers": ["Dusan Vlahovic", "Kenan Yıldız", "Francisco Conceição"]},
-        "Napoli": {"att": 88, "def": 85, "strikers": ["Romelu Lukaku", "Khvicha Kvaratskhelia", "Scott McTominay"]},
-        "Milan": {"att": 85, "def": 82, "strikers": ["Álvaro Morata", "Christian Pulisic", "Rafael Leão"]},
-        "Atalanta": {"att": 89, "def": 81, "strikers": ["Mateo Retegui", "Ademola Lookman", "Charles De Ketelaere"]},
-        "Roma": {"att": 83, "def": 82, "strikers": ["Artem Dovbyk", "Paulo Dybala", "Matías Soulé"]},
-        "Lazio": {"att": 81, "def": 80, "strikers": ["Taty Castellanos", "Mattia Zaccagni", "Boulaye Dia"]},
-        "Bologna": {"att": 79, "def": 79, "strikers": ["Thijs Dallinga", "Riccardo Orsolini", "Santiago Castro"]},
-        "Fiorentina": {"att": 80, "def": 78, "strikers": ["Moise Kean", "Albert Guðmundsson", "Andrea Colpani"]},
-        "Torino": {"att": 75, "def": 77, "strikers": ["Duván Zapata", "Antonio Sanabria", "Nikola Vlašić"]},
-        "Como": {"att": 76, "def": 74, "strikers": ["Nico Paz", "Patrick Cutrone", "Andrea Belotti"]},
-        "Genoa": {"att": 73, "def": 74, "strikers": ["Andrea Pinamonti", "Vitinha", "Junior Messias"]},
-        "Udinese": {"att": 74, "def": 73, "strikers": ["Lorenzo Lucca", "Florian Thauvin", "Keinan Davis"]},
-        "Parma": {"att": 73, "def": 71, "strikers": ["Ange-Yoan Bonny", "Dennis Man", "Matteo Cancellieri"]},
-        "Monza": {"att": 71, "def": 73, "strikers": ["Milan Djuric", "Dany Mota", "Gianluca Caprari"]},
-        "Verona": {"att": 70, "def": 71, "strikers": ["Casper Tengstedt", "Daniel Mosquera", "Darko Lazović"]},
-        "Cagliari": {"att": 70, "def": 70, "strikers": ["Roberto Piccoli", "Zito Luvumbo", "Gianluca Lapadula"]},
-        "Lecce": {"att": 68, "def": 70, "strikers": ["Nikola Krstović", "Santiago Pierotti", "Lameck Banda"]},
-        "Sassuolo": {"att": 72, "def": 70, "strikers": ["Andrea Pinamonti", "Armand Laurienté", "Domenico Berardi"]},
-        "Pisa": {"att": 67, "def": 68, "strikers": ["Nicholas Bonfanti", "Stefano Moreo", "Matteo Tramoni"]}
+        "Atalanta": {"att": 87, "def": 82, "strikers": ["De Ketelaere", "Scamacca", "Gaetano"]},
+        "Bologna": {"att": 80, "def": 79, "strikers": ["Orsolini", "Ndoye", "Castro"]},
+        "Cagliari": {"att": 70, "def": 70, "strikers": ["Luvumbo", "Piccoli", "Lapadula"]},
+        "Como": {"att": 77, "def": 75, "strikers": ["Strefezza", "Belotti", "Cutrone"]},
+        "Fiorentina": {"att": 80, "def": 78, "strikers": ["Gudmundsson", "Kean", "Mandragora"]},
+        "Frosinone": {"att": 71, "def": 72, "strikers": ["Birligea", "Kvernadze", "Calò"]},
+        "Genoa": {"att": 73, "def": 74, "strikers": ["Malinovskyi", "Messias", "Pinamonti"]},
+        "Inter": {"att": 91, "def": 89, "strikers": ["Lautaro Martínez", "Thuram", "Calhanoglu"]},
+        "Juventus": {"att": 88, "def": 87, "strikers": ["Yildiz", "Vlahović", "Koopmeiners"]},
+        "Lazio": {"att": 81, "def": 80, "strikers": ["Zaccagni", "Noslin", "Dia"]},
+        "Lecce": {"att": 69, "def": 70, "strikers": ["Rebic", "Krstovic", "Joel Monteiro"]},
+        "Milan": {"att": 85, "def": 82, "strikers": ["Pulisic", "Leão", "Morata"]},
+        "Monza": {"att": 72, "def": 73, "strikers": ["Maldini", "Mota", "Djuric"]},
+        "Napoli": {"att": 89, "def": 85, "strikers": ["Kvaratskhelia", "Politano", "Lukaku"]},
+        "Parma": {"att": 73, "def": 71, "strikers": ["Man", "Mihaila", "Bonny"]},
+        "Roma": {"att": 84, "def": 83, "strikers": ["Soulé", "Dybala", "Dovbyk"]},
+        "Sassuolo": {"att": 73, "def": 71, "strikers": ["Laurienté", "Moro", "Mulattieri"]},
+        "Torino": {"att": 75, "def": 77, "strikers": ["Vlasic", "Adams", "Sanabria"]},
+        "Udinese": {"att": 74, "def": 73, "strikers": ["Thauvin", "Brenner", "Lucca"]},
+        "Venezia": {"att": 69, "def": 69, "strikers": ["Oristanio", "Pohjanpalo", "Duncan"]}
     },
     "Premier League": {
-        "Manchester City": {"att": 94, "def": 89, "strikers": ["Erling Haaland", "Phil Foden", "Savinho"]},
-        "Arsenal": {"att": 91, "def": 90, "strikers": ["Bukayo Saka", "Kai Havertz", "Gabriel Martinelli"]},
-        "Liverpool": {"att": 92, "def": 87, "strikers": ["Mohamed Salah", "Darwin Núñez", "Luis Díaz"]},
-        "Chelsea": {"att": 86, "def": 81, "strikers": ["Cole Palmer", "Nicolas Jackson", "Noni Madueke"]},
-        "Aston Villa": {"att": 85, "def": 81, "strikers": ["Ollie Watkins", "Leon Bailey", "Jhon Durán"]},
-        "Tottenham": {"att": 86, "def": 80, "strikers": ["Dominic Solanke", "Son Heung-min", "Dejan Kulusevski"]},
-        "Newcastle": {"att": 85, "def": 82, "strikers": ["Alexander Isak", "Anthony Gordon", "Harvey Barnes"]},
-        "Manchester United": {"att": 83, "def": 80, "strikers": ["Joshua Zirkzee", "Rasmus Højlund", "Marcus Rashford"]},
-        "Brighton": {"att": 81, "def": 77, "strikers": ["Danny Welbeck", "Kaoru Mitoma", "Evan Ferguson"]},
-        "West Ham": {"att": 80, "def": 77, "strikers": ["Niclas Füllkrug", "Jarrod Bowen", "Mohammed Kudus"]},
-        "Bournemouth": {"att": 78, "def": 75, "strikers": ["Evanilson", "Antoine Semenyo", "Justin Kluivert"]},
-        "Brentford": {"att": 78, "def": 74, "strikers": ["Igor Thiago", "Bryan Mbeumo", "Yoane Wissa"]},
-        "Crystal Palace": {"att": 78, "def": 78, "strikers": ["Jean-Philippe Mateta", "Eberechi Eze", "Ismaïla Sarr"]},
-        "Fulham": {"att": 77, "def": 76, "strikers": ["Raúl Jiménez", "Adama Traoré", "Alex Iwobi"]},
-        "Nottingham Forest": {"att": 76, "def": 76, "strikers": ["Chris Wood", "Taiwo Awoniyi", "Anthony Elanga"]},
-        "Everton": {"att": 74, "def": 76, "strikers": ["Dominic Calvert-Lewin", "Beto", "Iliman Ndiaye"]},
-        "Wolves": {"att": 75, "def": 74, "strikers": ["Jørgen Strand Larsen", "Matheus Cunha", "Hwang Hee-chan"]},
-        "Leeds United": {"att": 73, "def": 72, "strikers": ["Joel Piroe", "Wilfried Gnonto", "Dan James"]},
-        "Burnley": {"att": 71, "def": 71, "strikers": ["Lyle Foster", "Zian Flemming", "Mike Trésor"]},
-        "Sunderland": {"att": 70, "def": 70, "strikers": ["Wilson Isidor", "Eliezer Mayenda", "Romaine Mundle"]}
+        "Arsenal": {"att": 92, "def": 91, "strikers": ["Bukayo Saka", "Kai Havertz", "Gabriel Martinelli"]},
+        "Aston Villa": {"att": 83, "def": 80, "strikers": ["Ollie Watkins", "Leon Bailey", "Morgan Rogers"]},
+        "Chelsea": {"att": 86, "def": 81, "strikers": ["Cole Palmer", "Nicolas Jackson", "Christopher Nkunku"]},
+        "Liverpool": {"att": 91, "def": 88, "strikers": ["Mohamed Salah", "Darwin Núñez", "Luis Díaz"]},
+        "Manchester City": {"att": 95, "def": 89, "strikers": ["Erling Haaland", "Phil Foden", "Savinho"]},
+        "Manchester United": {"att": 83, "def": 82, "strikers": ["Joshua Zirkzee", "Rasmus Højlund", "Alejandro Garnacho"]},
+        "Newcastle United": {"att": 84, "def": 82, "strikers": ["Alexander Isak", "Anthony Gordon", "Harvey Barnes"]},
+        "Tottenham": {"att": 86, "def": 81, "strikers": ["Son Heung-min", "Dominic Solanke", "Dejan Kulusevski"]}
     },
-    "LaLiga": {
-        "Real Madrid": {"att": 96, "def": 90, "strikers": ["Kylian Mbappé", "Vinícius Jr.", "Jude Bellingham"]},
-        "Barcelona": {"att": 92, "def": 84, "strikers": ["Robert Lewandowski", "Lamine Yamal", "Raphinha"]},
-        "Atlético Madrid": {"att": 88, "def": 88, "strikers": ["Julián Álvarez", "Antoine Griezmann", "Alexander Sørloth"]},
-        "Athletic Bilbao": {"att": 83, "def": 84, "strikers": ["Iñaki Williams", "Nico Williams", "Oihan Sancet"]},
-        "Real Sociedad": {"att": 80, "def": 81, "strikers": ["Mikel Oyarzabal", "Takefusa Kubo", "Orri Óskarsson"]},
-        "Villarreal": {"att": 82, "def": 77, "strikers": ["Ayoze Pérez", "Thierno Barry", "Álex Baena"]},
-        "Real Betis": {"att": 80, "def": 79, "strikers": ["Vitor Roque", "Giovani Lo Celso", "Ezequiel Ávila"]},
-        "Girona": {"att": 81, "def": 77, "strikers": ["Bojan Miovski", "Viktor Tsygankov", "Yaser Asprilla"]},
-        "Sevilla": {"att": 77, "def": 77, "strikers": ["Kelechi Iheanacho", "Isaac Romero", "Dodi Lukebakio"]},
-        "Osasuna": {"att": 75, "def": 76, "strikers": ["Ante Budimir", "Bryan Zaragoza", "Moi Gómez"]},
-        "Celta Vigo": {"att": 75, "def": 73, "strikers": ["Iago Aspas", "Borja Iglesias", "Jonathan Bamba"]},
-        "Valencia": {"att": 74, "def": 75, "strikers": ["Hugo Duro", "Rafa Mir", "Diego López"]},
-        "Rayo Vallecano": {"att": 72, "def": 74, "strikers": ["Sergio Camello", "Raúl de Tomás", "Isi Palazón"]},
-        "Mallorca": {"att": 73, "def": 75, "strikers": ["Vedat Muriqi", "Cyle Larin", "Dani Rodríguez"]},
-        "Getafe": {"att": 69, "def": 76, "strikers": ["Borja Mayoral", "Bertuğ Yıldırım", "Carles Pérez"]},
-        "Alavés": {"att": 71, "def": 73, "strikers": ["Kike García", "Toni Martínez", "Carlos Vicente"]},
-        "Las Palmas": {"att": 71, "def": 72, "strikers": ["Oli McBurnie", "Sandro Ramírez", "Alberto Moleiro"]},
-        "Espanyol": {"att": 70, "def": 71, "strikers": ["Javi Puado", "Alejo Véliz", "Walid Cheddira"]},
-        "Levante": {"att": 69, "def": 69, "strikers": ["José Morales", "Iván Romero", "Carlos Álvarez"]},
-        "Elche": {"att": 68, "def": 68, "strikers": ["Sory Kaba", "Mourad El Ghezouani", "Nico Fernández"]}
+    "La Liga": {
+        "Atletico Madrid": {"att": 86, "def": 86, "strikers": ["Julián Álvarez", "Antoine Griezmann", "Alexander Sørloth"]},
+        "Barcelona": {"att": 93, "def": 85, "strikers": ["Robert Lewandowski", "Lamine Yamal", "Raphinha"]},
+        "Real Madrid": {"att": 96, "def": 90, "strikers": ["Kylian Mbappé", "Vinicius Junior", "Rodrygo"]}
     },
     "Bundesliga": {
-        "Bayern Monaco": {"att": 93, "def": 86, "strikers": ["Harry Kane", "Jamal Musiala", "Michael Olise"]},
-        "Bayer Leverkusen": {"att": 89, "def": 85, "strikers": ["Victor Boniface", "Florian Wirtz", "Patrik Schick"]},
-        "RB Lipsia": {"att": 86, "def": 83, "strikers": ["Benjamin Šeško", "Loïs Openda", "Xavi Simons"]},
-        "Borussia Dortmund": {"att": 87, "def": 81, "strikers": ["Serhou Guirassy", "Karim Adeyemi", "Julian Brandt"]},
-        "Eintracht Francoforte": {"att": 84, "def": 78, "strikers": ["Hugo Ekitike", "Omar Marmoush", "Mario Götze"]},
-        "Stoccarda": {"att": 83, "def": 79, "strikers": ["Ermedin Demirović", "Deniz Undav", "Chris Führich"]},
-        "Friburgo": {"att": 77, "def": 78, "strikers": ["Junior Adamu", "Vincenzo Grifo", "Ritsu Doan"]},
-        "Gladbach": {"att": 76, "def": 74, "strikers": ["Tim Kleindienst", "Alassane Pléa", "Robin Hack"]},
-        "Wolfsburg": {"att": 76, "def": 75, "strikers": ["Mohamed Amoura", "Jonas Wind", "Lovro Majer"]},
-        "Hoffenheim": {"att": 77, "def": 73, "strikers": ["Andrej Kramarić", "Adam Hložek", "Mergim Berisha"]},
-        "Augsburg": {"att": 73, "def": 73, "strikers": ["Phillip Tietz", "Samuel Essende", "Alexis Claude-Maurice"]},
-        "Werder Brema": {"att": 74, "def": 73, "strikers": ["Marvin Ducksch", "Keke Topp", "Mitchell Weiser"]},
-        "Mainz": {"att": 73, "def": 74, "strikers": ["Jonathan Burkardt", "Nadiem Amiri", "Paul Nebel"]},
-        "Union Berlino": {"att": 72, "def": 75, "strikers": ["Benedict Hollerbach", "Yorbe Vertessen", "Tom Rothe"]},
-        "Heidenheim": {"att": 72, "def": 72, "strikers": ["Marvin Pieringer", "Leo Scienza", "Paul Wanner"]},
-        "St. Pauli": {"att": 68, "def": 69, "strikers": ["Johannes Eggestein", "Morgan Guilavogui", "Elias Saad"]},
-        "Köln": {"att": 71, "def": 70, "strikers": ["Tim Lemperle", "Damion Downs", "Linton Maina"]},
-        "Hamburger SV": {"att": 70, "def": 69, "strikers": ["Robert Glatzel", "Davie Selke", "Jean-Luc Dompé"]}
+        "Bayer Leverkusen": {"att": 90, "def": 85, "strikers": ["Victor Boniface", "Florian Wirtz", "Patrik Schick"]},
+        "Bayern Munich": {"att": 94, "def": 86, "strikers": ["Harry Kane", "Jamal Musiala", "Michael Olise"]},
+        "Borussia Dortmund": {"att": 86, "def": 82, "strikers": ["Serhou Guirassy", "Karim Adeyemi", "Donyell Malen"]}
     },
     "Ligue 1": {
-        "PSG": {"att": 91, "def": 86, "strikers": ["Ousmane Dembélé", "Bradley Barcola", "Gonçalo Ramos"]},
-        "Monaco": {"att": 84, "def": 80, "strikers": ["Folarin Balogun", "Breel Embolo", "Takumi Minamino"]},
-        "Marsiglia": {"att": 85, "def": 79, "strikers": ["Mason Greenwood", "Elye Wahi", "Neal Maupay"]},
-        "Lilla": {"att": 82, "def": 81, "strikers": ["Jonathan David", "Edon Zhegrova", "Rémy Cabella"]},
-        "Lione": {"att": 81, "def": 77, "strikers": ["Alexandre Lacazette", "Georges Mikautadze", "Malick Fofana"]},
-        "Nizza": {"att": 79, "def": 80, "strikers": ["Youssoufa Moukoko", "Gaëtan Laborde", "Jérémie Boga"]},
-        "Lens": {"att": 77, "def": 78, "strikers": ["M'Bala Nzola", "Wesley Saïd", "Florian Sotoca"]},
-        "Rennes": {"att": 78, "def": 76, "strikers": ["Arnaud Kalimuendo", "Ludovic Blas", "Albert Grønbæk"]},
-        "Brest": {"att": 77, "def": 77, "strikers": ["Ludovic Ajorque", "Romain Del Castillo", "Pierre Lees-Melou"]},
-        "Strasburgo": {"att": 75, "def": 72, "strikers": ["Emanuel Emegha", "Diego Moreira", "Sebastian Nanasi"]},
-        "Reims": {"att": 74, "def": 74, "strikers": ["Keito Nakamura", "Junya Ito", "Oumar Diakité"]},
-        "Tolosa": {"att": 72, "def": 72, "strikers": ["Zakaria Aboukhlal", "Frank Magri", "Yann Gboho"]},
-        "Nantes": {"att": 71, "def": 72, "strikers": ["Mostafa Mohamed", "Moses Simon", "Matthis Abline"]},
-        "Auxerre": {"att": 68, "def": 68, "strikers": ["Ado Onaiwu", "Lassine Sinayoko", "Gaëtan Perrin"]},
-        "Saint-Étienne": {"att": 68, "def": 69, "strikers": ["Ibrahim Sissoko", "Zuriko Davitashvili", "Lucas Stassin"]},
-        "Le Havre": {"att": 67, "def": 69, "strikers": ["Emmanuel Sabbi", "Antoine Joujou", "Yassine Kechta"]},
-        "Lorient": {"att": 70, "def": 68, "strikers": ["Bamba Dieng", "Aiyegun Tosin", "Pablo Pagis"]},
-        "Paris FC": {"att": 67, "def": 67, "strikers": ["Jean-Philippe Krasso", "Nouha Dicko", "Alimami Gory"]}
+        "Monaco": {"att": 83, "def": 80, "strikers": ["Folarin Balogun", "Breel Embolo", "Takumi Minamino"]},
+        "Marseille": {"att": 84, "def": 79, "strikers": ["Mason Greenwood", "Elye Wahi", "Luis Henrique"]},
+        "Paris Saint-Germain": {"att": 92, "def": 85, "strikers": ["Ousmane Dembélé", "Bradley Barcola", "Marco Asensio"]}
     }
 }
 
-# Selettori Squadre
+# Selettori Campionato e Squadre
 league = st.selectbox("🌐 Seleziona Campionato", list(FOOTBALL_DATABASE.keys()))
 teams_list = sorted(list(FOOTBALL_DATABASE[league].keys()))
 
@@ -227,19 +171,62 @@ else:
         prob_matrix = np.zeros((max_goals, max_goals))
         exact_scores = []
         
+        prob_over15 = 0.0
+        prob_over25 = 0.0
+        prob_under25 = 0.0
+        prob_gg = 0.0
+        prob_ng = 0.0
+        
+        prob_0_1_gol = 0.0
+        prob_2_3_gol = 0.0
+        prob_4_plus_gol = 0.0
+
         for h in range(max_goals):
             for a in range(max_goals):
                 p = poisson.pmf(h, home_xg) * poisson.pmf(a, away_xg)
                 prob_matrix[h, a] = p
                 exact_scores.append((f"{h} - {a}", p * 100))
 
+                total_goals = h + a
+                
+                if total_goals > 1.5:
+                    prob_over15 += p
+                if total_goals > 2.5:
+                    prob_over25 += p
+                else:
+                    prob_under25 += p
+                
+                if h > 0 and a > 0:
+                    prob_gg += p
+                else:
+                    prob_ng += p
+
+                if total_goals <= 1:
+                    prob_0_1_gol += p
+                elif 2 <= total_goals <= 3:
+                    prob_2_3_gol += p
+                else:
+                    prob_4_plus_gol += p
+
         home_win = float(np.sum(np.tril(prob_matrix, -1))) * 100
         draw = float(np.sum(np.diag(prob_matrix))) * 100
         away_win = float(np.sum(np.triu(prob_matrix, 1))) * 100
 
+        dc_1x = home_win + draw
+        dc_x2 = away_win + draw
+        dc_12 = home_win + away_win
+
+        prob_over15 *= 100
+        prob_over25 *= 100
+        prob_under25 *= 100
+        prob_gg *= 100
+        prob_ng *= 100
+        prob_0_1_gol *= 100
+        prob_2_3_gol *= 100
+        prob_4_plus_gol *= 100
+
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # Schede Neon 1X2
         col_1, col_x, col_2 = st.columns(3)
         with col_1:
             st.markdown(f"""
@@ -266,7 +253,6 @@ else:
                 </div>
             """, unsafe_allow_html=True)
 
-        # Expected Goals Box
         st.markdown(f"""
             <div class="xg-box">
                 ⚽ Expected Goals (xG) Calcolati: 
@@ -274,6 +260,74 @@ else:
                 <strong style="color: #ff007f;">{round(away_xg, 2)} {away_team}</strong>
             </div>
         """, unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.subheader("📊 Statistiche & Pronostici Schedina")
+        
+        d1, d2, d3, d4, d5 = st.columns(5)
+        with d1:
+            st.markdown(f"""<div class="bet-card">
+                <span style="color:#8b949e; font-size:0.8rem;">DOPPIA CHANCE 1X</span>
+                <h3 style="color:#00f2fe; margin:5px 0;">{round(dc_1x, 1)}%</h3>
+            </div>""", unsafe_allow_html=True)
+        with d2:
+            st.markdown(f"""<div class="bet-card">
+                <span style="color:#8b949e; font-size:0.8rem;">DOPPIA CHANCE X2</span>
+                <h3 style="color:#ff007f; margin:5px 0;">{round(dc_x2, 1)}%</h3>
+            </div>""", unsafe_allow_html=True)
+        with d3:
+            st.markdown(f"""<div class="bet-card">
+                <span style="color:#8b949e; font-size:0.8rem;">DOPPIA CHANCE 12</span>
+                <h3 style="color:#ffb703; margin:5px 0;">{round(dc_12, 1)}%</h3>
+            </div>""", unsafe_allow_html=True)
+        with d4:
+            st.markdown(f"""<div class="bet-card">
+                <span style="color:#8b949e; font-size:0.8rem;">GOAL (GG)</span>
+                <h3 style="color:#00c6ff; margin:5px 0;">{round(prob_gg, 1)}%</h3>
+            </div>""", unsafe_allow_html=True)
+        with d5:
+            st.markdown(f"""<div class="bet-card">
+                <span style="color:#8b949e; font-size:0.8rem;">NO GOAL (NG)</span>
+                <h3 style="color:#8b949e; margin:5px 0;">{round(prob_ng, 1)}%</h3>
+            </div>""", unsafe_allow_html=True)
+
+        o1, o2, o3, o4, o5 = st.columns(5)
+        with o1:
+            st.markdown(f"""<div class="bet-card">
+                <span style="color:#8b949e; font-size:0.8rem;">OVER 1.5 GOL</span>
+                <h3 style="color:#00f2fe; margin:5px 0;">{round(prob_over15, 1)}%</h3>
+            </div>""", unsafe_allow_html=True)
+        with o2:
+            st.markdown(f"""<div class="bet-card">
+                <span style="color:#8b949e; font-size:0.8rem;">OVER 2.5 GOL</span>
+                <h3 style="color:#00c6ff; margin:5px 0;">{round(prob_over25, 1)}%</h3>
+            </div>""", unsafe_allow_html=True)
+        with o3:
+            st.markdown(f"""<div class="bet-card">
+                <span style="color:#8b949e; font-size:0.8rem;">UNDER 2.5 GOL</span>
+                <h3 style="color:#ffb703; margin:5px 0;">{round(prob_under25, 1)}%</h3>
+            </div>""", unsafe_allow_html=True)
+        with o4:
+            st.markdown(f"""<div class="bet-card">
+                <span style="color:#8b949e; font-size:0.8rem;">SOMMA GOL 2-3</span>
+                <h3 style="color:#00f2fe; margin:5px 0;">{round(prob_2_3_gol, 1)}%</h3>
+            </div>""", unsafe_allow_html=True)
+        with o5:
+            st.markdown(f"""<div class="bet-card">
+                <span style="color:#8b949e; font-size:0.8rem;">SOMMA GOL 0-1</span>
+                <h3 style="color:#8b949e; margin:5px 0;">{round(prob_0_1_gol, 1)}%</h3>
+            </div>""", unsafe_allow_html=True)
+
+        best_dc = "1X" if dc_1x > dc_x2 and dc_1x > dc_12 else ("X2" if dc_x2 > dc_1x and dc_x2 > dc_12 else "12")
+        best_goals = "OVER 2.5" if prob_over25 > prob_under25 else "UNDER 2.5"
+        best_gg_ng = "GOAL (GG)" if prob_gg > prob_ng else "NO GOAL (NG)"
+
+        st.info(f"""
+            💡 **CONSIGLI PER LA VINCITA DELLA SCHEDINA:**
+            * 🛡️ **Doppia Chance Sicura:** `{best_dc}` (Probabilità: **{round(max(dc_1x, dc_x2, dc_12), 1)}%**)
+            * ⚽ **Linea Gol Consigliata:** `{best_goals}` (Over 1.5 coperto al **{round(prob_over15, 1)}%**)
+            * 🥅 **Entrambe a segno:** `{best_gg_ng}`
+        """)
 
         st.markdown("<br>", unsafe_allow_html=True)
         st.subheader("🎯 Risultati Esatti più Probabili")
@@ -311,10 +365,3 @@ else:
                 prob_scorer = min(round(weights[idx] * (away_xg / 1.05) * 100, 1), 82.0)
                 st.write(f"👤 **{player}** — `{prob_scorer}%`")
                 st.progress(prob_scorer / 100)
-
-        with st.expander("📋 Tabella Completa Risultati (Tutte le Combinazioni 0-0 fino a 5-5)"):
-            st.dataframe(
-                np.round(prob_matrix * 100, 1),
-                column_config={i: f"Ospiti: {i} gol" for i in range(max_goals)},
-                use_container_width=True
-            )
