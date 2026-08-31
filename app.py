@@ -10,25 +10,31 @@ st.caption("Applicazione per l'analisi predittiva delle partite di Serie A.")
 
 st.sidebar.header("⚙️ Configurazione API")
 api_key = st.sidebar.text_input("Inserisci API-Football Key:", type="password")
-season = st.sidebar.number_input("Anno Stagione (es. 2025 o 2024):", min_value=2020, max_value=2030, value=2025)
 
-LEAGUE_ID = 135
+LEAGUE_ID = 135  # Serie A
+SEASON = 2025    # Anno di inizio della stagione calcistica attuale
 
-def fetch_fixtures(key, season_year):
-    # Prova prima le intestazioni API-Sports standard
-    headers = {'x-apisports-key': key}
-    url = f"https://v3.football.api-sports.io/fixtures?league={LEAGUE_ID}&season={season_year}&last=10"
+def fetch_fixtures(key):
+    # Endpoint che recupera sia le ultime partite giocate sia le prossime
+    url = f"https://v3.football.api-sports.io/fixtures?league={LEAGUE_ID}&season={SEASON}&last=10"
+    headers = {'x-apisports-key': key.strip()}
     
-    res = requests.get(url, headers=headers)
-    data = res.json()
-    
-    # Se fallisce, prova l'intestazione RapidAPI
-    if res.status_code != 200 or not data.get("response"):
-        headers = {'x-rapidapi-host': "v3.football.api-sports.io", 'x-rapidapi-key': key}
-        res = requests.get(url, headers=headers)
-        data = res.json()
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        data = response.json()
         
-    return data.get("response", [])
+        # Se la chiave è di RapidAPI invece che API-Sports direct
+        if response.status_code != 200 or not data.get("response"):
+            headers_rapid = {
+                'x-rapidapi-host': "v3.football.api-sports.io",
+                'x-rapidapi-key': key.strip()
+            }
+            response = requests.get(url, headers=headers_rapid, timeout=10)
+            data = response.json()
+            
+        return data.get("response", [])
+    except Exception:
+        return []
 
 def analyze_match(home_att, home_def, away_att, away_def):
     home_xg = 1.45 * (home_att / 50.0) * (50.0 / away_def)
@@ -52,39 +58,22 @@ def analyze_match(home_att, home_def, away_att, away_def):
         "prob_2": round(away_win, 1)
     }
 
-# Modalità manuale sempre attiva come backup
-st.subheader("📊 Analisi Partita")
-
-if api_key:
-    fixtures = fetch_fixtures(api_key, season)
-    if fixtures:
+if not api_key:
+    st.warning("⚠️ Inserisci la tua API Key nella barra laterale a sinistra per iniziare.")
+else:
+    fixtures = fetch_fixtures(api_key)
+    if not fixtures:
+        st.error("❌ Impossibile recuperare i dati. Verifica che la chiave API sia corretta e attiva sul dashboard di API-Football.")
+    else:
+        st.success("✅ Connessione API riuscita! Seleziona una partita dal menu:")
         options = {f"{f['teams']['home']['name']} vs {f['teams']['away']['name']} ({f['fixture']['date'][:10]})": f for f in fixtures}
-        selected = st.selectbox("Seleziona una partita trovata via API:", list(options.keys()))
+        selected_option = st.selectbox("Partite disponibili:", list(options.keys()))
         
-        if st.button("🚀 Analizza Partita API", type="primary"):
+        if st.button("🚀 Genera Pronostico IA", type="primary"):
             res = analyze_match(75.0, 75.0, 70.0, 70.0)
+            
             m1, m2, m3 = st.columns(3)
             m1.metric("Vittoria Casa (1)", f"{res['prob_1']}%")
             m2.metric("Pareggio (X)", f"{res['prob_X']}%")
             m3.metric("Vittoria Trasferta (2)", f"{res['prob_2']}%")
             st.write(f"**xG Stimati:** {res['home_xg']} - {res['away_xg']}")
-    else:
-        st.warning("⚠️ Impossibile recuperare partite automatiche (Chiave errata o quota API esaurita per oggi). Usa la modalità manuale qui sotto:")
-
-st.markdown("---")
-st.subheader("⚙️ Calcolatore Manuale Scontro")
-col1, col2 = st.columns(2)
-with col1:
-    h_att = st.slider("Attacco Squadra Casa", 40, 99, 75)
-    h_def = st.slider("Difesa Squadra Casa", 40, 99, 75)
-with col2:
-    a_att = st.slider("Attacco Squadra Trasferta", 40, 99, 70)
-    a_def = st.slider("Difesa Squadra Trasferta", 40, 99, 70)
-
-if st.button("🚀 Calcola Pronostico Manuale"):
-    res = analyze_match(h_att, h_def, a_att, a_def)
-    m1, m2, m3 = st.columns(3)
-    m1.metric("Vittoria Casa (1)", f"{res['prob_1']}%")
-    m2.metric("Pareggio (X)", f"{res['prob_X']}%")
-    m3.metric("Vittoria Trasferta (2)", f"{res['prob_2']}%")
-    st.write(f"**xG Stimati:** Casa {res['home_xg']} - {res['away_xg']} Trasferta")
