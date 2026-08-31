@@ -1,79 +1,76 @@
 import streamlit as st
-import requests
 import numpy as np
 from scipy.stats import poisson
 
-st.set_page_config(page_title="Serie A Predictor AI", page_icon="⚽", layout="wide")
+st.set_page_config(page_title="Serie A AI Predictor", page_icon="⚽", layout="wide")
 
 st.title("⚽ Serie A AI Predictor")
-st.caption("Applicazione per l'analisi predittiva delle partite di Serie A.")
+st.caption("Modello predittivo avanzato per l'analisi delle partite di Serie A.")
 
-st.sidebar.header("⚙️ Configurazione API")
-api_key = st.sidebar.text_input("Inserisci API-Football Key:", type="password")
+# Valutazioni di forza delle squadre di Serie A (Attacco / Difesa)
+TEAMS_DATA = {
+    "Inter": {"att": 88, "def": 85},
+    "Juventus": {"att": 82, "def": 86},
+    "Milan": {"att": 84, "def": 80},
+    "Atalanta": {"att": 86, "def": 78},
+    "Napoli": {"att": 83, "def": 82},
+    "Roma": {"att": 80, "def": 79},
+    "Lazio": {"att": 79, "def": 78},
+    "Fiorentina": {"att": 78, "def": 76},
+    "Bologna": {"att": 76, "def": 77},
+    "Torino": {"att": 72, "def": 76},
+    "Genoa": {"att": 71, "def": 73},
+    "Monza": {"att": 70, "def": 72},
+    "Udinese": {"att": 71, "def": 72},
+    "Verona": {"att": 69, "def": 70},
+    "Lecce": {"att": 68, "def": 71},
+    "Cagliari": {"att": 69, "def": 69},
+    "Empoli": {"att": 67, "def": 70},
+    "Parma": {"att": 70, "def": 68},
+    "Como": {"att": 71, "def": 69},
+    "Venezia": {"att": 67, "def": 67}
+}
 
-LEAGUE_ID = 135  # Serie A
-SEASON = 2025    # Anno di inizio della stagione calcistica attuale
+teams = sorted(list(TEAMS_DATA.keys()))
 
-def fetch_fixtures(key):
-    # Endpoint che recupera sia le ultime partite giocate sia le prossime
-    url = f"https://v3.football.api-sports.io/fixtures?league={LEAGUE_ID}&season={SEASON}&last=10"
-    headers = {'x-apisports-key': key.strip()}
-    
-    try:
-        response = requests.get(url, headers=headers, timeout=10)
-        data = response.json()
-        
-        # Se la chiave è di RapidAPI invece che API-Sports direct
-        if response.status_code != 200 or not data.get("response"):
-            headers_rapid = {
-                'x-rapidapi-host': "v3.football.api-sports.io",
-                'x-rapidapi-key': key.strip()
-            }
-            response = requests.get(url, headers=headers_rapid, timeout=10)
-            data = response.json()
-            
-        return data.get("response", [])
-    except Exception:
-        return []
+st.subheader("⚔️ Seleziona la Partita")
 
-def analyze_match(home_att, home_def, away_att, away_def):
-    home_xg = 1.45 * (home_att / 50.0) * (50.0 / away_def)
-    away_xg = 1.15 * (away_att / 50.0) * (50.0 / home_def)
+col1, col2 = st.columns(2)
 
-    max_goals = 6
-    prob_matrix = np.zeros((max_goals, max_goals))
-    for h in range(max_goals):
-        for a in range(max_goals):
-            prob_matrix[h, a] = poisson.pmf(h, home_xg) * poisson.pmf(a, away_xg)
+with col1:
+    home_team = st.selectbox("Squadra in Casa (1):", teams, index=teams.index("Roma") if "Roma" in teams else 0)
 
-    home_win = float(np.sum(np.tril(prob_matrix, -1))) * 100
-    draw = float(np.sum(np.diag(prob_matrix))) * 100
-    away_win = float(np.sum(np.triu(prob_matrix, 1))) * 100
+with col2:
+    away_team = st.selectbox("Squadra in Trasferta (2):", teams, index=teams.index("Lecce") if "Lecce" in teams else 1)
 
-    return {
-        "home_xg": round(home_xg, 2), 
-        "away_xg": round(away_xg, 2),
-        "prob_1": round(home_win, 1), 
-        "prob_X": round(draw, 1), 
-        "prob_2": round(away_win, 1)
-    }
-
-if not api_key:
-    st.warning("⚠️ Inserisci la tua API Key nella barra laterale a sinistra per iniziare.")
+if home_team == away_team:
+    st.warning("⚠️ Seleziona due squadre diverse per calcolare il pronostico.")
 else:
-    fixtures = fetch_fixtures(api_key)
-    if not fixtures:
-        st.error("❌ Impossibile recuperare i dati. Verifica che la chiave API sia corretta e attiva sul dashboard di API-Football.")
-    else:
-        st.success("✅ Connessione API riuscita! Seleziona una partita dal menu:")
-        options = {f"{f['teams']['home']['name']} vs {f['teams']['away']['name']} ({f['fixture']['date'][:10]})": f for f in fixtures}
-        selected_option = st.selectbox("Partite disponibili:", list(options.keys()))
+    if st.button("🚀 Calcola Pronostico IA", type="primary"):
+        h_data = TEAMS_DATA[home_team]
+        a_data = TEAMS_DATA[away_team]
         
-        if st.button("🚀 Genera Pronostico IA", type="primary"):
-            res = analyze_match(75.0, 75.0, 70.0, 70.0)
-            
-            m1, m2, m3 = st.columns(3)
-            m1.metric("Vittoria Casa (1)", f"{res['prob_1']}%")
-            m2.metric("Pareggio (X)", f"{res['prob_X']}%")
-            m3.metric("Vittoria Trasferta (2)", f"{res['prob_2']}%")
-            st.write(f"**xG Stimati:** {res['home_xg']} - {res['away_xg']}")
+        # Calcolo Expected Goals (xG) con fattore campo
+        home_xg = 1.35 * (h_data["att"] / 75.0) * (75.0 / a_data["def"])
+        away_xg = 1.05 * (a_data["att"] / 75.0) * (75.0 / h_data["def"])
+        
+        # Matrice di Poisson per probabilità 1X2
+        max_goals = 6
+        prob_matrix = np.zeros((max_goals, max_goals))
+        for h in range(max_goals):
+            for a in range(max_goals):
+                prob_matrix[h, a] = poisson.pmf(h, home_xg) * poisson.pmf(a, away_xg)
+
+        home_win = float(np.sum(np.tril(prob_matrix, -1))) * 100
+        draw = float(np.sum(np.diag(prob_matrix))) * 100
+        away_win = float(np.sum(np.triu(prob_matrix, 1))) * 100
+
+        st.markdown("---")
+        st.write(f"### 📊 Pronostico per **{home_team} - {away_team}**")
+        
+        m1, m2, m3 = st.columns(3)
+        m1.metric(f"Vittoria {home_team} (1)", f"{round(home_win, 1)}%")
+        m2.metric("Pareggio (X)", f"{round(draw, 1)}%")
+        m3.metric(f"Vittoria {away_team} (2)", f"{round(away_win, 1)}%")
+        
+        st.info(f"⚽ **Expected Goals (xG) stimati:** {home_team} **{round(home_xg, 2)}** - **{round(away_xg, 2)}** {away_team}")
