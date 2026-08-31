@@ -8,7 +8,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- CSS FUTURISTICO AVANZATO (NEON & GLASSMORPHISM) ---
+# --- CSS ORDINATO & PULITO ---
 st.markdown("""
     <style>
     .main {
@@ -17,7 +17,7 @@ st.markdown("""
     
     .cyber-title {
         font-family: 'Segoe UI', Roboto, sans-serif;
-        font-size: 2.6rem;
+        font-size: 2.4rem;
         font-weight: 900;
         text-align: center;
         background: linear-gradient(90deg, #00f2fe 0%, #4facfe 50%, #00c6ff 100%);
@@ -25,14 +25,13 @@ st.markdown("""
         -webkit-text-fill-color: transparent;
         text-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
         margin-bottom: 5px;
-        letter-spacing: 1px;
     }
     
     .cyber-subtitle {
         text-align: center;
         color: #8b949e;
-        font-size: 0.95rem;
-        margin-bottom: 35px;
+        font-size: 0.9rem;
+        margin-bottom: 25px;
         letter-spacing: 2px;
         text-transform: uppercase;
     }
@@ -40,62 +39,51 @@ st.markdown("""
     .neon-card {
         background: rgba(22, 27, 34, 0.7);
         backdrop-filter: blur(10px);
-        border-radius: 16px;
-        padding: 24px 15px;
+        border-radius: 14px;
+        padding: 18px 10px;
         text-align: center;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-        transition: all 0.3s ease;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     }
-    .neon-card-1 { border: 1px solid #00f2fe; box-shadow: 0 0 15px rgba(0, 242, 254, 0.2); }
-    .neon-card-x { border: 1px solid #ffb703; box-shadow: 0 0 15px rgba(255, 183, 3, 0.2); }
-    .neon-card-2 { border: 1px solid #ff007f; box-shadow: 0 0 15px rgba(255, 0, 127, 0.2); }
+    .neon-card-1 { border: 1px solid #00f2fe; }
+    .neon-card-x { border: 1px solid #ffb703; }
+    .neon-card-2 { border: 1px solid #ff007f; }
 
     .neon-label {
-        font-size: 0.85rem;
+        font-size: 0.75rem;
         font-weight: 700;
-        letter-spacing: 1.5px;
+        letter-spacing: 1px;
         color: #8b949e;
+        margin-bottom: 6px;
+    }
+    
+    .neon-val-1 { color: #00f2fe; font-size: 1.8rem; font-weight: 900; }
+    .neon-val-x { color: #ffb703; font-size: 1.8rem; font-weight: 900; }
+    .neon-val-2 { color: #ff007f; font-size: 1.8rem; font-weight: 900; }
+
+    .stat-box {
+        background: rgba(22, 27, 34, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        padding: 12px;
+        text-align: center;
         margin-bottom: 8px;
     }
     
-    .neon-val-1 { color: #00f2fe; font-size: 2.2rem; font-weight: 900; text-shadow: 0 0 10px rgba(0, 242, 254, 0.5); }
-    .neon-val-x { color: #ffb703; font-size: 2.2rem; font-weight: 900; text-shadow: 0 0 10px rgba(255, 183, 3, 0.5); }
-    .neon-val-2 { color: #ff007f; font-size: 2.2rem; font-weight: 900; text-shadow: 0 0 10px rgba(255, 0, 127, 0.5); }
-
-    .score-badge {
-        background: rgba(30, 41, 59, 0.8);
+    .xg-box {
+        background: linear-gradient(90deg, rgba(0,242,254,0.08) 0%, rgba(255,0,127,0.08) 100%);
         border: 1px solid rgba(255, 255, 255, 0.1);
-        border-left: 4px solid #00f2fe;
         border-radius: 10px;
         padding: 12px;
-        margin-bottom: 10px;
         text-align: center;
-    }
-
-    .bet-card {
-        background: rgba(22, 27, 34, 0.8);
-        border: 1px solid rgba(0, 242, 254, 0.3);
-        border-radius: 12px;
-        padding: 12px;
-        text-align: center;
-        margin-bottom: 10px;
-    }
-    
-    .xg-box {
-        background: linear-gradient(90deg, rgba(0,242,254,0.1) 0%, rgba(255,0,127,0.1) 100%);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 12px;
-        padding: 15px;
-        text-align: center;
-        font-size: 1.1rem;
+        font-size: 1rem;
         color: #f0f6fc;
-        margin-top: 25px;
+        margin-bottom: 20px;
     }
     </style>
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="cyber-title">⚡ EUROPE FOOTBALL AI PREDICTOR</div>', unsafe_allow_html=True)
-st.markdown('<div class="cyber-subtitle">MODELLO ALGORITMICO AVANZATO • EUROPEAN LEAGUES 2026/2027</div>', unsafe_allow_html=True)
+st.markdown('<div class="cyber-subtitle">MODELLO ALGORITMICO ORDINATO • EUROPEAN LEAGUES 2026/2027</div>', unsafe_allow_html=True)
 
 FOOTBALL_DATABASE = {
     "Serie A": {
@@ -147,20 +135,23 @@ FOOTBALL_DATABASE = {
     }
 }
 
-# Selettori Campionato e Squadre
-league = st.selectbox("🌐 Seleziona Campionato", list(FOOTBALL_DATABASE.keys()))
+# Pannello di controllo superiore compatto
+col_sel1, col_sel2, col_sel3 = st.columns([1.2, 1.2, 1.2])
+with col_sel1:
+    league = st.selectbox("🌐 Campionato", list(FOOTBALL_DATABASE.keys()))
 teams_list = sorted(list(FOOTBALL_DATABASE[league].keys()))
 
-c1, c2 = st.columns(2)
-with c1:
-    home_team = st.selectbox("🏠 Squadra di Casa", teams_list, index=0)
-with c2:
-    away_team = st.selectbox("✈️ Squadra Ospite", teams_list, index=1 if len(teams_list) > 1 else 0)
+with col_sel2:
+    home_team = st.selectbox("🏠 Casa", teams_list, index=0)
+with col_sel3:
+    away_team = st.selectbox("✈️ Ospite", teams_list, index=1 if len(teams_list) > 1 else 0)
+
+st.markdown("<br>", unsafe_allow_html=True)
 
 if home_team == away_team:
-    st.warning("⚠️ Seleziona due squadre diverse.")
+    st.warning("⚠️ Seleziona due squadre diverse per procedere.")
 else:
-    if st.button("🚀 AVVIA SIMULAZIONE IA", type="primary", use_container_width=True):
+    if st.button("🚀 ESEGUI ANALISI ALGORMITICA", type="primary", use_container_width=True):
         h_data = FOOTBALL_DATABASE[league][home_team]
         a_data = FOOTBALL_DATABASE[league][away_team]
         
@@ -171,15 +162,8 @@ else:
         prob_matrix = np.zeros((max_goals, max_goals))
         exact_scores = []
         
-        prob_over15 = 0.0
-        prob_over25 = 0.0
-        prob_under25 = 0.0
-        prob_gg = 0.0
-        prob_ng = 0.0
-        
-        prob_0_1_gol = 0.0
-        prob_2_3_gol = 0.0
-        prob_4_plus_gol = 0.0
+        prob_over15 = prob_over25 = prob_under25 = prob_gg = prob_ng = 0.0
+        prob_0_1_gol = prob_2_3_gol = prob_4_plus_gol = 0.0
 
         for h in range(max_goals):
             for a in range(max_goals):
@@ -188,180 +172,104 @@ else:
                 exact_scores.append((f"{h} - {a}", p * 100))
 
                 total_goals = h + a
+                if total_goals > 1.5: prob_over15 += p
+                if total_goals > 2.5: prob_over25 += p
+                else: prob_under25 += p
                 
-                if total_goals > 1.5:
-                    prob_over15 += p
-                if total_goals > 2.5:
-                    prob_over25 += p
-                else:
-                    prob_under25 += p
-                
-                if h > 0 and a > 0:
-                    prob_gg += p
-                else:
-                    prob_ng += p
+                if h > 0 and a > 0: prob_gg += p
+                else: prob_ng += p
 
-                if total_goals <= 1:
-                    prob_0_1_gol += p
-                elif 2 <= total_goals <= 3:
-                    prob_2_3_gol += p
-                else:
-                    prob_4_plus_gol += p
+                if total_goals <= 1: prob_0_1_gol += p
+                elif 2 <= total_goals <= 3: prob_2_3_gol += p
+                else: prob_4_plus_gol += p
 
         home_win = float(np.sum(np.tril(prob_matrix, -1))) * 100
         draw = float(np.sum(np.diag(prob_matrix))) * 100
         away_win = float(np.sum(np.triu(prob_matrix, 1))) * 100
 
-        dc_1x = home_win + draw
-        dc_x2 = away_win + draw
-        dc_12 = home_win + away_win
+        dc_1x, dc_x2, dc_12 = home_win + draw, away_win + draw, home_win + away_win
 
-        prob_over15 *= 100
-        prob_over25 *= 100
-        prob_under25 *= 100
-        prob_gg *= 100
-        prob_ng *= 100
-        prob_0_1_gol *= 100
-        prob_2_3_gol *= 100
-        prob_4_plus_gol *= 100
+        prob_over15 *= 100; prob_over25 *= 100; prob_under25 *= 100
+        prob_gg *= 100; prob_ng *= 100
+        prob_0_1_gol *= 100; prob_2_3_gol *= 100; prob_4_plus_gol *= 100
+
+        # --- 1. ESITO 1X2 PRINCIPALE ---
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            st.markdown(f'<div class="neon-card neon-card-1"><div class="neon-label">1 (CASA)</div><div class="neon-val-1">{round(home_win, 1)}%</div><div style="font-size:0.75rem; color:#8b949e;">{home_team}</div></div>', unsafe_allow_html=True)
+        with c2:
+            st.markdown(f'<div class="neon-card neon-card-x"><div class="neon-label">X (PAREGGIO)</div><div class="neon-val-x">{round(draw, 1)}%</div><div style="font-size:0.75rem; color:#8b949e;">Equilibrio</div></div>', unsafe_allow_html=True)
+        with c3:
+            st.markdown(f'<div class="neon-card neon-card-2"><div class="neon-label">2 (TRASFERTA)</div><div class="neon-val-2">{round(away_win, 1)}%</div><div style="font-size:0.75rem; color:#8b949e;">{away_team}</div></div>', unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
-        
-        col_1, col_x, col_2 = st.columns(3)
-        with col_1:
-            st.markdown(f"""
-                <div class="neon-card neon-card-1">
-                    <div class="neon-label">VITTORIA CASA (1)</div>
-                    <div class="neon-val-1">{round(home_win, 1)}%</div>
-                    <div style="color: #00f2fe; font-size: 0.8rem; margin-top:5px;">{home_team}</div>
-                </div>
-            """, unsafe_allow_html=True)
-        with col_x:
-            st.markdown(f"""
-                <div class="neon-card neon-card-x">
-                    <div class="neon-label">PAREGGIO (X)</div>
-                    <div class="neon-val-x">{round(draw, 1)}%</div>
-                    <div style="color: #ffb703; font-size: 0.8rem; margin-top:5px;">EQ. MATEMATICA</div>
-                </div>
-            """, unsafe_allow_html=True)
-        with col_2:
-            st.markdown(f"""
-                <div class="neon-card neon-card-2">
-                    <div class="neon-label">VITTORIA TRASFERTA (2)</div>
-                    <div class="neon-val-2">{round(away_win, 1)}%</div>
-                    <div style="color: #ff007f; font-size: 0.8rem; margin-top:5px;">{away_team}</div>
-                </div>
-            """, unsafe_allow_html=True)
-
         st.markdown(f"""
             <div class="xg-box">
-                ⚽ Expected Goals (xG) Calcolati: 
-                <strong style="color: #00f2fe;">{home_team} {round(home_xg, 2)}</strong> — 
-                <strong style="color: #ff007f;">{round(away_xg, 2)} {away_team}</strong>
+                ⚽ <strong>Expected Goals (xG):</strong> &nbsp; 
+                <span style="color: #00f2fe;">{home_team} ({round(home_xg, 2)})</span> &nbsp;—&nbsp; 
+                <span style="color: #ff007f;">({round(away_xg, 2)}) {away_team}</span>
             </div>
         """, unsafe_allow_html=True)
 
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.subheader("📊 Statistiche & Pronostici Schedina")
-        
-        d1, d2, d3, d4, d5 = st.columns(5)
-        with d1:
-            st.markdown(f"""<div class="bet-card">
-                <span style="color:#8b949e; font-size:0.8rem;">DOPPIA CHANCE 1X</span>
-                <h3 style="color:#00f2fe; margin:5px 0;">{round(dc_1x, 1)}%</h3>
-            </div>""", unsafe_allow_html=True)
-        with d2:
-            st.markdown(f"""<div class="bet-card">
-                <span style="color:#8b949e; font-size:0.8rem;">DOPPIA CHANCE X2</span>
-                <h3 style="color:#ff007f; margin:5px 0;">{round(dc_x2, 1)}%</h3>
-            </div>""", unsafe_allow_html=True)
-        with d3:
-            st.markdown(f"""<div class="bet-card">
-                <span style="color:#8b949e; font-size:0.8rem;">DOPPIA CHANCE 12</span>
-                <h3 style="color:#ffb703; margin:5px 0;">{round(dc_12, 1)}%</h3>
-            </div>""", unsafe_allow_html=True)
-        with d4:
-            st.markdown(f"""<div class="bet-card">
-                <span style="color:#8b949e; font-size:0.8rem;">GOAL (GG)</span>
-                <h3 style="color:#00c6ff; margin:5px 0;">{round(prob_gg, 1)}%</h3>
-            </div>""", unsafe_allow_html=True)
-        with d5:
-            st.markdown(f"""<div class="bet-card">
-                <span style="color:#8b949e; font-size:0.8rem;">NO GOAL (NG)</span>
-                <h3 style="color:#8b949e; margin:5px 0;">{round(prob_ng, 1)}%</h3>
-            </div>""", unsafe_allow_html=True)
-
-        o1, o2, o3, o4, o5 = st.columns(5)
-        with o1:
-            st.markdown(f"""<div class="bet-card">
-                <span style="color:#8b949e; font-size:0.8rem;">OVER 1.5 GOL</span>
-                <h3 style="color:#00f2fe; margin:5px 0;">{round(prob_over15, 1)}%</h3>
-            </div>""", unsafe_allow_html=True)
-        with o2:
-            st.markdown(f"""<div class="bet-card">
-                <span style="color:#8b949e; font-size:0.8rem;">OVER 2.5 GOL</span>
-                <h3 style="color:#00c6ff; margin:5px 0;">{round(prob_over25, 1)}%</h3>
-            </div>""", unsafe_allow_html=True)
-        with o3:
-            st.markdown(f"""<div class="bet-card">
-                <span style="color:#8b949e; font-size:0.8rem;">UNDER 2.5 GOL</span>
-                <h3 style="color:#ffb703; margin:5px 0;">{round(prob_under25, 1)}%</h3>
-            </div>""", unsafe_allow_html=True)
-        with o4:
-            st.markdown(f"""<div class="bet-card">
-                <span style="color:#8b949e; font-size:0.8rem;">SOMMA GOL 2-3</span>
-                <h3 style="color:#00f2fe; margin:5px 0;">{round(prob_2_3_gol, 1)}%</h3>
-            </div>""", unsafe_allow_html=True)
-        with o5:
-            st.markdown(f"""<div class="bet-card">
-                <span style="color:#8b949e; font-size:0.8rem;">SOMMA GOL 0-1</span>
-                <h3 style="color:#8b949e; margin:5px 0;">{round(prob_0_1_gol, 1)}%</h3>
-            </div>""", unsafe_allow_html=True)
-
+        # --- 2. SEZIONE CONSIGLI & DRITTE SCHEDINA (ORDINATA) ---
         best_dc = "1X" if dc_1x > dc_x2 and dc_1x > dc_12 else ("X2" if dc_x2 > dc_1x and dc_x2 > dc_12 else "12")
         best_goals = "OVER 2.5" if prob_over25 > prob_under25 else "UNDER 2.5"
         best_gg_ng = "GOAL (GG)" if prob_gg > prob_ng else "NO GOAL (NG)"
 
-        st.info(f"""
-            💡 **CONSIGLI PER LA VINCITA DELLA SCHEDINA:**
-            * 🛡️ **Doppia Chance Sicura:** `{best_dc}` (Probabilità: **{round(max(dc_1x, dc_x2, dc_12), 1)}%**)
-            * ⚽ **Linea Gol Consigliata:** `{best_goals}` (Over 1.5 coperto al **{round(prob_over15, 1)}%**)
-            * 🥅 **Entrambe a segno:** `{best_gg_ng}`
+        st.success(f"""
+            💡 **SINTESI SCHEDINA CONSIGLIATA:**
+            * 🛡️ **Miglior Doppia Chance:** `{best_dc}` ({round(max(dc_1x, dc_x2, dc_12), 1)}%)
+            * ⚽ **Linea Gol Consigliata:** `{best_goals}` (Over 1.5 al {round(prob_over15, 1)}%)
+            * 🥅 **Opzione Entrambe a Segno:** `{best_gg_ng}`
         """)
 
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.subheader("🎯 Risultati Esatti più Probabili")
-        
-        exact_scores.sort(key=lambda x: x[1], reverse=True)
-        top5 = exact_scores[:5]
-        
-        res_cols = st.columns(5)
-        for idx, (score, prob) in enumerate(top5):
-            with res_cols[idx]:
-                st.markdown(f"""
-                    <div class="score-badge">
-                        <span style="color: #8b949e; font-size: 0.75rem;">RANK #{idx+1}</span><br>
-                        <strong style="color: #ffffff; font-size: 1.4rem;">{score}</strong><br>
-                        <span style="color: #00f2fe; font-weight: bold;">{round(prob, 1)}%</span>
-                    </div>
-                """, unsafe_allow_html=True)
+        # --- 3. DETTAGLI STATISTICI TRAMITE EXPANDERS ---
+        with st.expander("📊 Visualizza statistiche dettagliate mercati (Doppia Chance, Over/Under, Somma Gol)", expanded=True):
+            col_s1, col_s2 = st.columns(2)
+            
+            with col_s1:
+                st.markdown("**🔹 Mercati Esito & Doppia Chance**")
+                st.markdown(f'<div class="stat-box">Doppia Chance 1X: <strong style="color:#00f2fe;">{round(dc_1x, 1)}%</strong></div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="stat-box">Doppia Chance X2: <strong style="color:#ff007f;">{round(dc_x2, 1)}%</strong></div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="stat-box">Doppia Chance 12: <strong style="color:#ffb703;">{round(dc_12, 1)}%</strong></div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="stat-box">Entrambe a Segno (Goal): <strong style="color:#00c6ff;">{round(prob_gg, 1)}%</strong></div>', unsafe_allow_html=True)
+            
+            with col_s2:
+                st.markdown("**🔹 Mercati Goal & Somma Reti**")
+                st.markdown(f'<div class="stat-box">Over 1.5 Gol: <strong style="color:#00f2fe;">{round(prob_over15, 1)}%</strong></div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="stat-box">Over 2.5 Gol: <strong style="color:#00c6ff;">{round(prob_over25, 1)}%</strong></div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="stat-box">Under 2.5 Gol: <strong style="color:#ffb703;">{round(prob_under25, 1)}%</strong></div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="stat-box">Somma Gol 2-3: <strong style="color:#00f2fe;">{round(prob_2_3_gol, 1)}%</strong></div>', unsafe_allow_html=True)
 
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.subheader("⚽ Probabilità Marcatori IA")
-        
-        m_col1, m_col2 = st.columns(2)
-        weights = [0.44, 0.32, 0.22]
-        
-        with m_col1:
-            st.write(f"**Marcatori {home_team}:**")
-            for idx, player in enumerate(h_data["strikers"]):
-                prob_scorer = min(round(weights[idx] * (home_xg / 1.35) * 100, 1), 82.0)
-                st.write(f"👤 **{player}** — `{prob_scorer}%`")
-                st.progress(prob_scorer / 100)
-                
-        with m_col2:
-            st.write(f"**Marcatori {away_team}:**")
-            for idx, player in enumerate(a_data["strikers"]):
-                prob_scorer = min(round(weights[idx] * (away_xg / 1.05) * 100, 1), 82.0)
-                st.write(f"👤 **{player}** — `{prob_scorer}%`")
-                st.progress(prob_scorer / 100)
+        with st.expander("🎯 Visualizza i 5 Risultati Esatti più probabili", expanded=True):
+            exact_scores.sort(key=lambda x: x[1], reverse=True)
+            top5 = exact_scores[:5]
+            
+            res_cols = st.columns(5)
+            for idx, (score, prob) in enumerate(top5):
+                with res_cols[idx]:
+                    st.markdown(f"""
+                        <div class="stat-box">
+                            <span style="font-size:0.7rem; color:#8b949e;">#{idx+1}</span><br>
+                            <strong style="font-size:1.2rem; color:#fff;">{score}</strong><br>
+                            <span style="color:#00f2fe; font-size:0.9rem;">{round(prob, 1)}%</span>
+                        </div>
+                    """, unsafe_allow_html=True)
+
+        with st.expander("⚽ Analisi Probabilità Marcatori delle Squadre", expanded=False):
+            m_col1, m_col2 = st.columns(2)
+            weights = [0.44, 0.32, 0.22]
+            
+            with m_col1:
+                st.markdown(f"**Marcatori {home_team}**")
+                for idx, player in enumerate(h_data["strikers"]):
+                    prob_scorer = min(round(weights[idx] * (home_xg / 1.35) * 100, 1), 82.0)
+                    st.write(f"• **{player}**: `{prob_scorer}%`")
+                    st.progress(prob_scorer / 100)
+                    
+            with m_col2:
+                st.markdown(f"**Marcatori {away_team}**")
+                for idx, player in enumerate(a_data["strikers"]):
+                    prob_scorer = min(round(weights[idx] * (away_xg / 1.05) * 100, 1), 82.0)
+                    st.write(f"• **{player}**: `{prob_scorer}%`")
+                    st.progress(prob_scorer / 100)
