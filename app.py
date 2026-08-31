@@ -4,8 +4,8 @@ from scipy.stats import poisson
 
 st.set_page_config(page_title="Europe Football AI Predictor", page_icon="⚽", layout="wide")
 
-st.title("⚽ Europe Football AI Predictor (Stagione 2026-2027)")
-st.caption("Modello predittivo avanzato: 1X2, Risultati Esatti e Marcatori per i campionati europei.")
+st.title("⚽ Europe Football AI Predictor")
+st.caption("Modello predittivo basato su dati aggiornati da Transfermarkt.")
 
 FOOTBALL_DATABASE = {
     "Serie A": {
@@ -14,7 +14,7 @@ FOOTBALL_DATABASE = {
         "Milan": {"att": 84, "def": 80, "strikers": ["Álvaro Morata", "Rafael Leão", "Christian Pulisic"]},
         "Atalanta": {"att": 86, "def": 78, "strikers": ["Mateo Retegui", "Ademola Lookman", "Charles De Ketelaere"]},
         "Napoli": {"att": 83, "def": 82, "strikers": ["Romelu Lukaku", "Giacomo Raspadori", "Scott McTominay"]},
-        "Roma": {"att": 80, "def": 79, "strikers": ["Santiago Castro", "Paulo Dybala", "Matías Soulé"]},
+        "Roma": {"att": 80, "def": 79, "strikers": ["Paulo Dybala", "Matías Soulé", "Tommaso Baldanzi"]},
         "Bologna": {"att": 77, "def": 77, "strikers": ["Artem Dovbyk", "Thijs Dallinga", "Riccardo Orsolini"]},
         "Lazio": {"att": 79, "def": 78, "strikers": ["Taty Castellanos", "Mattia Zaccagni", "Boulaye Dia"]},
         "Fiorentina": {"att": 78, "def": 76, "strikers": ["Moise Kean", "Albert Guðmundsson", "Andrea Colpani"]},
@@ -35,10 +35,10 @@ FOOTBALL_DATABASE = {
         "Arsenal": {"att": 89, "def": 88, "strikers": ["Kai Havertz", "Bukayo Saka", "Gabriel Martinelli"]},
         "Liverpool": {"att": 90, "def": 84, "strikers": ["Mohamed Salah", "Darwin Núñez", "Luis Díaz"]},
         "Aston Villa": {"att": 83, "def": 79, "strikers": ["Ollie Watkins", "Leon Bailey", "Jhon Durán"]},
-        "Tottenham": {"att": 84, "def": 78, "strikers": ["Son Heung-min", "Dominic Solanke", "Sandro Tonali"]},
-        "Chelsea": {"att": 83, "def": 77, "strikers": ["Nicolas Jackson", "Cole Palmer", "Morgan Rogers"]},
+        "Tottenham": {"att": 84, "def": 78, "strikers": ["Son Heung-min", "Dominic Solanke", "James Maddison"]},
+        "Chelsea": {"att": 83, "def": 77, "strikers": ["Nicolas Jackson", "Cole Palmer", "Noni Madueke"]},
         "Manchester United": {"att": 80, "def": 78, "strikers": ["Rasmus Højlund", "Marcus Rashford", "Bruno Fernandes"]},
-        "Newcastle": {"att": 82, "def": 79, "strikers": ["Alexander Isak", "Harvey Barnes", "Jacob Murphy"]},
+        "Newcastle": {"att": 82, "def": 79, "strikers": ["Alexander Isak", "Anthony Gordon", "Harvey Barnes"]},
         "West Ham": {"att": 78, "def": 76, "strikers": ["Michail Antonio", "Jarrod Bowen", "Lucas Paquetá"]},
         "Brighton": {"att": 80, "def": 75, "strikers": ["Danny Welbeck", "Kaoru Mitoma", "Evan Ferguson"]}
     },
@@ -60,7 +60,7 @@ FOOTBALL_DATABASE = {
         "Eintracht Francoforte": {"att": 82, "def": 76, "strikers": ["Omar Marmoush", "Hugo Ekitike", "Mario Götze"]}
     },
     "Ligue 1": {
-        "PSG": {"att": 90, "def": 84, "strikers": ["Khvicha Kvaratskhelia", "Bradley Barcola", "Ousmane Dembélé"]},
+        "PSG": {"att": 91, "def": 84, "strikers": ["Khvicha Kvaratskhelia", "Bradley Barcola", "Ousmane Dembélé"]},
         "Monaco": {"att": 82, "def": 78, "strikers": ["Folarin Balogun", "Breel Embolo", "Takumi Minamino"]},
         "Lilla": {"att": 80, "def": 79, "strikers": ["Jonathan David", "Edon Zhegrova", "Rémy Cabella"]},
         "Marsiglia": {"att": 83, "def": 77, "strikers": ["Elye Wahi", "Mason Greenwood", "Amine Harit"]},
@@ -70,7 +70,7 @@ FOOTBALL_DATABASE = {
         "Real Madrid": {"att": 94, "def": 88, "strikers": ["Kylian Mbappé", "Vinícius Jr.", "Jude Bellingham"]},
         "Manchester City": {"att": 93, "def": 87, "strikers": ["Erling Haaland", "Phil Foden", "Kevin De Bruyne"]},
         "Bayern Monaco": {"att": 91, "def": 84, "strikers": ["Harry Kane", "Jamal Musiala", "Michael Olise"]},
-        "PSG": {"att": 90, "def": 84, "strikers": ["Khvicha Kvaratskhelia", "Bradley Barcola", "Ousmane Dembélé"]},
+        "PSG": {"att": 91, "def": 84, "strikers": ["Khvicha Kvaratskhelia", "Bradley Barcola", "Ousmane Dembélé"]},
         "Inter": {"att": 88, "def": 85, "strikers": ["Lautaro Martínez", "Marcus Thuram", "Hakan Çalhanoğlu"]},
         "Barcelona": {"att": 90, "def": 82, "strikers": ["Robert Lewandowski", "Lamine Yamal", "Raphinha"]},
         "Arsenal": {"att": 89, "def": 88, "strikers": ["Kai Havertz", "Bukayo Saka", "Gabriel Martinelli"]},
