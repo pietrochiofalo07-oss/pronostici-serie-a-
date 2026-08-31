@@ -222,7 +222,6 @@ else:
         exact_scores = []
         
         prob_over15 = prob_over25 = prob_under25 = prob_gg = prob_ng = 0.0
-        prob_0_1_gol = prob_2_3_gol = prob_4_plus_gol = 0.0
 
         for h in range(max_goals):
             for a in range(max_goals):
@@ -238,19 +237,12 @@ else:
                 if h > 0 and a > 0: prob_gg += p
                 else: prob_ng += p
 
-                if total_goals <= 1: prob_0_1_gol += p
-                elif 2 <= total_goals <= 3: prob_2_3_gol += p
-                else: prob_4_plus_gol += p
-
         home_win = float(np.sum(np.tril(prob_matrix, -1))) * 100
         draw = float(np.sum(np.diag(prob_matrix))) * 100
         away_win = float(np.sum(np.triu(prob_matrix, 1))) * 100
 
-        dc_1x, dc_x2, dc_12 = home_win + draw, away_win + draw, home_win + away_win
-
         prob_over15 *= 100; prob_over25 *= 100; prob_under25 *= 100
         prob_gg *= 100; prob_ng *= 100
-        prob_0_1_gol *= 100; prob_2_3_gol *= 100; prob_4_plus_gol *= 100
 
         # --- 1. ESITO 1X2 PRINCIPALE ---
         c1, c2, c3 = st.columns(3)
@@ -271,34 +263,29 @@ else:
         """, unsafe_allow_html=True)
 
         # --- 2. SEZIONE CONSIGLI & DRITTE SCHEDINA ---
-        best_dc = "1X" if dc_1x > dc_x2 and dc_1x > dc_12 else ("X2" if dc_x2 > dc_1x and dc_x2 > dc_12 else "12")
         best_goals = "OVER 2.5" if prob_over25 > prob_under25 else "UNDER 2.5"
         best_gg_ng = "GOAL (GG)" if prob_gg > prob_ng else "NO GOAL (NG)"
 
         st.success(f"""
             💡 **SINTESI SCHEDINA CONSIGLIATA:**
-            * 🛡️ **Miglior Doppia Chance:** `{best_dc}` ({round(max(dc_1x, dc_x2, dc_12), 1)}%)
             * ⚽ **Linea Gol Consigliata:** `{best_goals}` (Over 1.5 al {round(prob_over15, 1)}%)
             * 🥅 **Opzione Entrambe a Segno:** `{best_gg_ng}`
         """)
 
         # --- 3. DETTAGLI STATISTICI TRAMITE EXPANDERS ---
-        with st.expander("📊 Visualizza statistiche dettagliate mercati (Doppia Chance, Over/Under, Somma Gol)", expanded=True):
+        with st.expander("📊 Visualizza statistiche dettagliate mercati (Over/Under, Goal/No Goal)", expanded=True):
             col_s1, col_s2 = st.columns(2)
             
             with col_s1:
-                st.markdown("**🔹 Mercati Esito & Doppia Chance**")
-                st.markdown(f'<div class="stat-box">Doppia Chance 1X: <strong style="color:#00f2fe;">{round(dc_1x, 1)}%</strong></div>', unsafe_allow_html=True)
-                st.markdown(f'<div class="stat-box">Doppia Chance X2: <strong style="color:#ff007f;">{round(dc_x2, 1)}%</strong></div>', unsafe_allow_html=True)
-                st.markdown(f'<div class="stat-box">Doppia Chance 12: <strong style="color:#ffb703;">{round(dc_12, 1)}%</strong></div>', unsafe_allow_html=True)
+                st.markdown("**🔹 Mercati Goal & Entrambe a Segno**")
                 st.markdown(f'<div class="stat-box">Entrambe a Segno (Goal): <strong style="color:#00c6ff;">{round(prob_gg, 1)}%</strong></div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="stat-box">No Goal (NG): <strong style="color:#ffb703;">{round(prob_ng, 1)}%</strong></div>', unsafe_allow_html=True)
             
             with col_s2:
-                st.markdown("**🔹 Mercati Goal & Somma Reti**")
+                st.markdown("**🔹 Mercati Over / Under**")
                 st.markdown(f'<div class="stat-box">Over 1.5 Gol: <strong style="color:#00f2fe;">{round(prob_over15, 1)}%</strong></div>', unsafe_allow_html=True)
                 st.markdown(f'<div class="stat-box">Over 2.5 Gol: <strong style="color:#00c6ff;">{round(prob_over25, 1)}%</strong></div>', unsafe_allow_html=True)
                 st.markdown(f'<div class="stat-box">Under 2.5 Gol: <strong style="color:#ffb703;">{round(prob_under25, 1)}%</strong></div>', unsafe_allow_html=True)
-                st.markdown(f'<div class="stat-box">Somma Gol 2-3: <strong style="color:#00f2fe;">{round(prob_2_3_gol, 1)}%</strong></div>', unsafe_allow_html=True)
 
         with st.expander("🎯 Visualizza i 5 Risultati Esatti più probabili", expanded=True):
             exact_scores.sort(key=lambda x: x[1], reverse=True)
