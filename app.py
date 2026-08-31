@@ -79,6 +79,17 @@ st.markdown("""
         color: #f0f6fc;
         margin-bottom: 20px;
     }
+
+    .match-analysis-box {
+        background: rgba(22, 27, 34, 0.8);
+        border-left: 4px solid #00f2fe;
+        border-radius: 4px 10px 10px 4px;
+        padding: 15px;
+        margin-bottom: 20px;
+        color: #e6edf3;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -261,6 +272,17 @@ else:
                 <span style="color: #ff007f;">({round(away_xg, 2)}) {away_team}</span>
             </div>
         """, unsafe_allow_html=True)
+
+        # --- 1.5 SPIEGAZIONE TIPO DI PARTITA ---
+        total_xg = home_xg + away_xg
+        if total_xg > 3.2:
+            match_narrative = f"🔥 **Analisi Tattica del Match:** Sarà una partita **estremamente aperta, intensa e ad alto potenziale offensivo**. Entrambe le squadre vantano reparti d'attacco di primissimo livello e difese che potrebbero concedere spazi, lasciando presagire un incontro ricco di ribaltamenti di fronte e occasioni da rete su entrambi i lati."
+        elif total_xg < 2.2:
+            match_narrative = f"🔒 **Analisi Tattica del Match:** Ci attende una sfida **molto tattica, bloccata e difensivamente accorta**. Le due squadre tenderanno a rischiare il meno possibile, bloccando le linee di passaggio centrali e affidandosi a episodi o giocate dei singoli per sbloccare il punteggio in un contesto di forte equilibrio."
+        else:
+            match_narrative = f"⚖️ **Analisi Tattica del Match:** Sarà una gara **equilibrata e giocata a scacchi**, caratterizzata da fasi alterne di controllo del gioco. La gestione dei ritmi a centrocampo e la precisione nello sfruttare i calci piazzati o le ripartenze saranno determinanti per piegare l'inerzia dell'incontro."
+
+        st.markdown(f'<div class="match-analysis-box">{match_narrative}</div>', unsafe_allow_html=True)
 
         # --- 2. SEZIONE CONSIGLI & DRITTE SCHEDINA ---
         best_goals = "OVER 2.5" if prob_over25 > prob_under25 else "UNDER 2.5"
