@@ -83,115 +83,114 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="cyber-title">⚡ EUROPE FOOTBALL AI PREDICTOR</div>', unsafe_allow_html=True)
-st.markdown('<div class="cyber-subtitle">MODELLO ALGORITMICO ORDINATO • EUROPEAN LEAGUES 2026/2027</div>', unsafe_allow_html=True)
+st.markdown('<div class="cyber-subtitle">MODELLO POTENZIATO TOP ROSE • EUROPEAN LEAGUES 2026/2027</div>', unsafe_allow_html=True)
 
 FOOTBALL_DATABASE = {
     "Serie A": {
-        "Atalanta": {"att": 87, "def": 82, "strikers": ["De Ketelaere", "Scamacca", "Gaetano"]},
-        "Bologna": {"att": 80, "def": 79, "strikers": ["Orsolini", "Ndoye", "Castro"]},
-        "Cagliari": {"att": 70, "def": 70, "strikers": ["Luvumbo", "Piccoli", "Lapadula"]},
-        "Como": {"att": 77, "def": 75, "strikers": ["Strefezza", "Belotti", "Cutrone"]},
-        "Fiorentina": {"att": 80, "def": 78, "strikers": ["Gudmundsson", "Kean", "Mandragora"]},
-        "Frosinone": {"att": 71, "def": 72, "strikers": ["Birligea", "Kvernadze", "Calò"]},
-        "Genoa": {"att": 73, "def": 74, "strikers": ["Malinovskyi", "Messias", "Pinamonti"]},
-        "Inter": {"att": 91, "def": 89, "strikers": ["Lautaro Martínez", "Thuram", "Calhanoglu"]},
-        "Juventus": {"att": 88, "def": 87, "strikers": ["Yildiz", "Vlahović", "Koopmeiners"]},
-        "Lazio": {"att": 81, "def": 80, "strikers": ["Zaccagni", "Noslin", "Dia"]},
-        "Lecce": {"att": 69, "def": 70, "strikers": ["Rebic", "Krstovic", "Joel Monteiro"]},
-        "Milan": {"att": 85, "def": 82, "strikers": ["Pulisic", "Leão", "Morata"]},
-        "Monza": {"att": 72, "def": 73, "strikers": ["Maldini", "Mota", "Djuric"]},
-        "Napoli": {"att": 89, "def": 85, "strikers": ["Kvaratskhelia", "Politano", "Lukaku"]},
-        "Parma": {"att": 73, "def": 71, "strikers": ["Man", "Mihaila", "Bonny"]},
-        "Roma": {"att": 84, "def": 83, "strikers": ["Soulé", "Dybala", "Dovbyk"]},
-        "Sassuolo": {"att": 73, "def": 71, "strikers": ["Laurienté", "Moro", "Mulattieri"]},
-        "Torino": {"att": 75, "def": 77, "strikers": ["Vlasic", "Adams", "Sanabria"]},
-        "Udinese": {"att": 74, "def": 73, "strikers": ["Thauvin", "Brenner", "Lucca"]},
-        "Venezia": {"att": 69, "def": 69, "strikers": ["Oristanio", "Pohjanpalo", "Duncan"]}
+        "Atalanta": {"att": 91, "def": 86, "strikers": ["De Ketelaere", "Scamacca", "Retegui", "Lookman"]},
+        "Bologna": {"att": 84, "def": 83, "strikers": ["Orsolini", "Ndoye", "Castro", "Dallinga"]},
+        "Cagliari": {"att": 76, "def": 75, "strikers": ["Luvumbo", "Piccoli", "Lapadula", "Viola"]},
+        "Como": {"att": 81, "def": 79, "strikers": ["Strefezza", "Belotti", "Cutrone", "Nico Paz"]},
+        "Fiorentina": {"att": 85, "def": 82, "strikers": ["Gudmundsson", "Kean", "Colpani", "Beltrán"]},
+        "Frosinone": {"att": 75, "def": 75, "strikers": ["Birligea", "Kvernadze", "Ambrosino"]},
+        "Genoa": {"att": 78, "def": 78, "strikers": ["Malinovskyi", "Messias", "Pinamonti", "Vitinha"]},
+        "Inter": {"att": 95, "def": 93, "strikers": ["Lautaro Martínez", "Thuram", "Taremi", "Calhanoglu"]},
+        "Juventus": {"att": 92, "def": 91, "strikers": ["Yildiz", "Vlahović", "Koopmeiners", "Conceição"]},
+        "Lazio": {"att": 86, "def": 84, "strikers": ["Zaccagni", "Noslin", "Dia", "Castellanos"]},
+        "Lecce": {"att": 74, "def": 75, "strikers": ["Rebic", "Krstovic", "Banda"]},
+        "Milan": {"att": 90, "def": 86, "strikers": ["Pulisic", "Leão", "Morata", "Abraham"]},
+        "Monza": {"att": 77, "def": 77, "strikers": ["Maldini", "Mota", "Djuric", "Caprari"]},
+        "Napoli": {"att": 93, "def": 89, "strikers": ["Kvaratskhelia", "Politano", "Lukaku", "Neres"]},
+        "Parma": {"att": 78, "def": 75, "strikers": ["Man", "Mihaila", "Bonny", "Charpentier"]},
+        "Roma": {"att": 89, "def": 87, "strikers": ["Soulé", "Dybala", "Dovbyk", "El Shaarawy"]},
+        "Sassuolo": {"att": 77, "def": 75, "strikers": ["Laurienté", "Moro", "Mulattieri", "Berardi"]},
+        "Torino": {"att": 80, "def": 81, "strikers": ["Vlasic", "Adams", "Sanabria", "Zapata"]},
+        "Udinese": {"att": 79, "def": 77, "strikers": ["Thauvin", "Brenner", "Lucca", "Davis"]},
+        "Venezia": {"att": 74, "def": 73, "strikers": ["Oristanio", "Pohjanpalo", "Ellertsson"]}
     },
     "Premier League": {
-        "Arsenal": {"att": 92, "def": 91, "strikers": ["Bukayo Saka", "Kai Havertz", "Gabriel Martinelli"]},
-        "Aston Villa": {"att": 83, "def": 80, "strikers": ["Ollie Watkins", "Leon Bailey", "Morgan Rogers"]},
-        "Bournemouth": {"att": 76, "def": 75, "strikers": ["Evanilson", "Antoine Semenyo", "Justin Kluivert"]},
-        "Brentford": {"att": 78, "def": 74, "strikers": ["Igor Thiago", "Bryan Mbeumo", "Yoane Wissa"]},
-        "Brighton": {"att": 81, "def": 77, "strikers": ["Danny Welbeck", "Kaoru Mitoma", "Evan Ferguson"]},
-        "Chelsea": {"att": 86, "def": 81, "strikers": ["Cole Palmer", "Nicolas Jackson", "Christopher Nkunku"]},
-        "Crystal Palace": {"att": 78, "def": 78, "strikers": ["Jean-Philippe Mateta", "Eberechi Eze", "Ismaïla Sarr"]},
-        "Everton": {"att": 74, "def": 76, "strikers": ["Dominic Calvert-Lewin", "Beto", "Iliman Ndiaye"]},
-        "Fulham": {"att": 77, "def": 76, "strikers": ["Raúl Jiménez", "Adama Traoré", "Alex Iwobi"]},
-        "Ipswich Town": {"att": 70, "def": 69, "strikers": ["Liam Delap", "Omari Hutchinson", "Sammie Szmodics"]},
-        "Leeds United": {"att": 73, "def": 72, "strikers": ["Joel Piroe", "Wilfried Gnonto", "Dan James"]},
-        "Liverpool": {"att": 91, "def": 88, "strikers": ["Mohamed Salah", "Darwin Núñez", "Luis Díaz"]},
-        "Manchester City": {"att": 95, "def": 89, "strikers": ["Erling Haaland", "Phil Foden", "Savinho"]},
-        "Manchester United": {"att": 83, "def": 82, "strikers": ["Joshua Zirkzee", "Rasmus Højlund", "Alejandro Garnacho"]},
-        "Newcastle United": {"att": 84, "def": 82, "strikers": ["Alexander Isak", "Anthony Gordon", "Harvey Barnes"]},
-        "Nottingham Forest": {"att": 76, "def": 76, "strikers": ["Chris Wood", "Taiwo Awoniyi", "Anthony Elanga"]},
-        "Sunderland": {"att": 70, "def": 70, "strikers": ["Wilson Isidor", "Eliezer Mayenda", "Romaine Mundle"]},
-        "Tottenham": {"att": 86, "def": 81, "strikers": ["Son Heung-min", "Dominic Solanke", "Dejan Kulusevski"]},
-        "West Ham": {"att": 80, "def": 77, "strikers": ["Jarrod Bowen", "Mohammed Kudus", "Niclas Füllkrug"]},
-        "Wolves": {"att": 75, "def": 74, "strikers": ["Matheus Cunha", "Jørgen Strand Larsen", "Hwang Hee-chan"]}
+        "Arsenal": {"att": 95, "def": 94, "strikers": ["Bukayo Saka", "Kai Havertz", "Gabriel Martinelli", "Gabriel Jesus"]},
+        "Aston Villa": {"att": 88, "def": 85, "strikers": ["Ollie Watkins", "Leon Bailey", "Morgan Rogers", "Jhon Durán"]},
+        "Bournemouth": {"att": 81, "def": 80, "strikers": ["Evanilson", "Antoine Semenyo", "Justin Kluivert"]},
+        "Brentford": {"att": 82, "def": 79, "strikers": ["Igor Thiago", "Bryan Mbeumo", "Yoane Wissa"]},
+        "Brighton": {"att": 85, "def": 82, "strikers": ["Danny Welbeck", "Kaoru Mitoma", "Evan Ferguson", "João Pedro"]},
+        "Chelsea": {"att": 91, "def": 86, "strikers": ["Cole Palmer", "Nicolas Jackson", "Christopher Nkunku", "Pedro Neto"]},
+        "Crystal Palace": {"att": 82, "def": 82, "strikers": ["Jean-Philippe Mateta", "Eberechi Eze", "Ismaïla Sarr"]},
+        "Everton": {"att": 79, "def": 80, "strikers": ["Dominic Calvert-Lewin", "Beto", "Iliman Ndiaye"]},
+        "Fulham": {"att": 81, "def": 80, "strikers": ["Raúl Jiménez", "Adama Traoré", "Alex Iwobi", "Emile Smith Rowe"]},
+        "Ipswich Town": {"att": 75, "def": 74, "strikers": ["Liam Delap", "Omari Hutchinson", "Sammie Szmodics"]},
+        "Leeds United": {"att": 78, "def": 77, "strikers": ["Joel Piroe", "Wilfried Gnonto", "Dan James"]},
+        "Liverpool": {"att": 94, "def": 92, "strikers": ["Mohamed Salah", "Darwin Núñez", "Luis Díaz", "Diogo Jota"]},
+        "Manchester City": {"att": 98, "def": 93, "strikers": ["Erling Haaland", "Phil Foden", "Savinho", "Kevin De Bruyne"]},
+        "Manchester United": {"att": 88, "def": 86, "strikers": ["Joshua Zirkzee", "Rasmus Højlund", "Alejandro Garnacho", "Marcus Rashford"]},
+        "Newcastle United": {"att": 89, "def": 87, "strikers": ["Alexander Isak", "Anthony Gordon", "Harvey Barnes", "Callum Wilson"]},
+        "Nottingham Forest": {"att": 81, "def": 81, "strikers": ["Chris Wood", "Taiwo Awoniyi", "Anthony Elanga", "Morgan Gibbs-White"]},
+        "Sunderland": {"att": 75, "def": 75, "strikers": ["Wilson Isidor", "Eliezer Mayenda", "Romaine Mundle"]},
+        "Tottenham": {"att": 90, "def": 85, "strikers": ["Son Heung-min", "Dominic Solanke", "Dejan Kulusevski", "James Maddison"]},
+        "West Ham": {"att": 85, "def": 81, "strikers": ["Jarrod Bowen", "Mohammed Kudus", "Niclas Füllkrug", "Lucas Paquetá"]},
+        "Wolves": {"att": 80, "def": 79, "strikers": ["Matheus Cunha", "Jørgen Strand Larsen", "Hwang Hee-chan"]}
     },
     "La Liga": {
-        "Alavés": {"att": 71, "def": 73, "strikers": ["Kike García", "Toni Martínez", "Carlos Vicente"]},
-        "Athletic Club": {"att": 83, "def": 84, "strikers": ["Nico Williams", "Iñaki Williams", "Oihan Sancet"]},
-        "Atlético Madrid": {"att": 86, "def": 86, "strikers": ["Julián Álvarez", "Antoine Griezmann", "Alexander Sørloth"]},
-        "Barcelona": {"att": 93, "def": 85, "strikers": ["Robert Lewandowski", "Lamine Yamal", "Raphinha"]},
-        "Celta Vigo": {"att": 75, "def": 73, "strikers": ["Iago Aspas", "Borja Iglesias", "Jonathan Bamba"]},
-        "Deportivo Alavés": {"att": 71, "def": 73, "strikers": ["Kike García", "Toni Martínez", "Carlos Vicente"]},
-        "Elche": {"att": 68, "def": 68, "strikers": ["Sory Kaba", "Mourad", "Nico Fernández"]},
-        "Espanyol": {"att": 70, "def": 71, "strikers": ["Javi Puado", "Alejo Véliz", "Walid Cheddira"]},
-        "Getafe": {"att": 69, "def": 76, "strikers": ["Borja Mayoral", "Bertuğ Yıldırım", "Carles Pérez"]},
-        "Girona": {"att": 81, "def": 77, "strikers": ["Bojan Miovski", "Viktor Tsygankov", "Yaser Asprilla"]},
-        "Las Palmas": {"att": 71, "def": 72, "strikers": ["Oli McBurnie", "Sandro Ramírez", "Alberto Moleiro"]},
-        "Leganés": {"att": 67, "def": 70, "strikers": ["Sébastien Haller", "Miguel de la Fuente", "Juan Cruz"]},
-        "Levante": {"att": 69, "def": 69, "strikers": ["José Morales", "Iván Romero", "Carlos Álvarez"]},
-        "Mallorca": {"att": 73, "def": 75, "strikers": ["Vedat Muriqi", "Cyle Larin", "Dani Rodríguez"]},
-        "Osasuna": {"att": 75, "def": 76, "strikers": ["Ante Budimir", "Bryan Zaragoza", "Moi Gómez"]},
-        "Rayo Vallecano": {"att": 72, "def": 74, "strikers": ["Sergio Camello", "Raúl de Tomás", "Isi Palazón"]},
-        "Real Betis": {"att": 80, "def": 79, "strikers": ["Vitor Roque", "Giovani Lo Celso", "Ezequiel Ávila"]},
-        "Real Madrid": {"att": 96, "def": 90, "strikers": ["Kylian Mbappé", "Vinicius Junior", "Rodrygo"]},
-        "Real Sociedad": {"att": 80, "def": 81, "strikers": ["Mikel Oyarzabal", "Takefusa Kubo", "Orri Óskarsson"]},
-        "Sevilla": {"att": 77, "def": 77, "strikers": ["Kelechi Iheanacho", "Isaac Romero", "Dodi Lukebakio"]},
-        "Valencia": {"att": 74, "def": 75, "strikers": ["Hugo Duro", "Rafa Mir", "Diego López"]},
-        "Villarreal": {"att": 82, "def": 77, "strikers": ["Ayoze Pérez", "Thierno Barry", "Álex Baena"]}
+        "Alavés": {"att": 76, "def": 78, "strikers": ["Kike García", "Toni Martínez", "Carlos Vicente"]},
+        "Athletic Club": {"att": 87, "def": 88, "strikers": ["Nico Williams", "Iñaki Williams", "Oihan Sancet", "Gorka Guruzeta"]},
+        "Atlético Madrid": {"att": 91, "def": 91, "strikers": ["Julián Álvarez", "Antoine Griezmann", "Alexander Sørloth", "Ángel Correa"]},
+        "Barcelona": {"att": 96, "def": 89, "strikers": ["Robert Lewandowski", "Lamine Yamal", "Raphinha", "Dani Olmo"]},
+        "Celta Vigo": {"att": 80, "def": 78, "strikers": ["Iago Aspas", "Borja Iglesias", "Jonathan Bamba"]},
+        "Elche": {"att": 73, "def": 73, "strikers": ["Sory Kaba", "Mourad", "Nico Fernández"]},
+        "Espanyol": {"att": 75, "def": 76, "strikers": ["Javi Puado", "Alejo Véliz", "Walid Cheddira"]},
+        "Getafe": {"att": 74, "def": 80, "strikers": ["Borja Mayoral", "Bertuğ Yıldırım", "Carles Pérez"]},
+        "Girona": {"att": 85, "def": 81, "strikers": ["Bojan Miovski", "Viktor Tsygankov", "Yaser Asprilla", "Abel Ruiz"]},
+        "Las Palmas": {"att": 76, "def": 77, "strikers": ["Oli McBurnie", "Sandro Ramírez", "Alberto Moleiro"]},
+        "Leganés": {"att": 72, "def": 75, "strikers": ["Sébastien Haller", "Miguel de la Fuente", "Juan Cruz"]},
+        "Levante": {"att": 74, "def": 74, "strikers": ["José Morales", "Iván Romero", "Carlos Álvarez"]},
+        "Mallorca": {"att": 78, "def": 80, "strikers": ["Vedat Muriqi", "Cyle Larin", "Dani Rodríguez"]},
+        "Osasuna": {"att": 80, "def": 81, "strikers": ["Ante Budimir", "Bryan Zaragoza", "Moi Gómez"]},
+        "Rayo Vallecano": {"att": 77, "def": 79, "strikers": ["Sergio Camello", "Raúl de Tomás", "Isi Palazón"]},
+        "Real Betis": {"att": 85, "def": 83, "strikers": ["Vitor Roque", "Giovani Lo Celso", "Ezequiel Ávila", "Isco"]},
+        "Real Madrid": {"att": 99, "def": 94, "strikers": ["Kylian Mbappé", "Vinicius Junior", "Rodrygo", "Jude Bellingham"]},
+        "Real Sociedad": {"att": 85, "def": 85, "strikers": ["Mikel Oyarzabal", "Takefusa Kubo", "Orri Óskarsson", "Brais Méndez"]},
+        "Sevilla": {"att": 82, "def": 82, "strikers": ["Kelechi Iheanacho", "Isaac Romero", "Dodi Lukebakio", "Lucas Ocampos"]},
+        "Valencia": {"att": 79, "def": 80, "strikers": ["Hugo Duro", "Rafa Mir", "Diego López", "Javi Guerra"]},
+        "Villarreal": {"att": 86, "def": 81, "strikers": ["Ayoze Pérez", "Thierno Barry", "Álex Baena", "Gerard Moreno"]}
     },
     "Bundesliga": {
-        "Augsburg": {"att": 73, "def": 73, "strikers": ["Phillip Tietz", "Samuel Essende", "Alexis Claude-Maurice"]},
-        "Bayer Leverkusen": {"att": 90, "def": 85, "strikers": ["Victor Boniface", "Florian Wirtz", "Patrik Schick"]},
-        "Bayern Munich": {"att": 94, "def": 86, "strikers": ["Harry Kane", "Jamal Musiala", "Michael Olise"]},
-        "Borussia Dortmund": {"att": 86, "def": 82, "strikers": ["Serhou Guirassy", "Karim Adeyemi", "Donyell Malen"]},
-        "Eintracht Frankfurt": {"att": 84, "def": 78, "strikers": ["Hugo Ekitike", "Omar Marmoush", "Mario Götze"]},
-        "Freiburg": {"att": 77, "def": 78, "strikers": ["Junior Adamu", "Vincenzo Grifo", "Ritsu Doan"]},
-        "Gladbach": {"att": 76, "def": 74, "strikers": ["Tim Kleindienst", "Alassane Pléa", "Robin Hack"]},
-        "Hamburger SV": {"att": 70, "def": 69, "strikers": ["Robert Glatzel", "Davie Selke", "Jean-Luc Dompé"]},
-        "Hoffenheim": {"att": 77, "def": 73, "strikers": ["Andrej Kramarić", "Adam Hložek", "Mergim Berisha"]},
-        "Köln": {"att": 71, "def": 70, "strikers": ["Tim Lemperle", "Damion Downs", "Linton Maina"]},
-        "Mainz": {"att": 73, "def": 74, "strikers": ["Jonathan Burkardt", "Nadiem Amiri", "Paul Nebel"]},
-        "RB Leipzig": {"att": 86, "def": 83, "strikers": ["Benjamin Šeško", "Loïs Openda", "Xavi Simons"]},
-        "St. Pauli": {"att": 68, "def": 69, "strikers": ["Johannes Eggestein", "Morgan Guilavogui", "Elias Saad"]},
-        "Stuttgart": {"att": 83, "def": 79, "strikers": ["Ermedin Demirović", "Deniz Undav", "Chris Führich"]},
-        "Union Berlin": {"att": 72, "def": 75, "strikers": ["Benedict Hollerbach", "Yorbe Vertessen", "Tom Rothe"]},
-        "Werder Bremen": {"att": 74, "def": 73, "strikers": ["Marvin Ducksch", "Keke Topp", "Mitchell Weiser"]},
-        "Wolfsburg": {"att": 76, "def": 75, "strikers": ["Mohamed Amoura", "Jonas Wind", "Lovro Majer"]}
+        "Augsburg": {"att": 78, "def": 78, "strikers": ["Phillip Tietz", "Samuel Essende", "Alexis Claude-Maurice"]},
+        "Bayer Leverkusen": {"att": 94, "def": 89, "strikers": ["Victor Boniface", "Florian Wirtz", "Patrik Schick", "Jeremie Frimpong"]},
+        "Bayern Munich": {"att": 97, "def": 90, "strikers": ["Harry Kane", "Jamal Musiala", "Michael Olise", "Serge Gnabry"]},
+        "Borussia Dortmund": {"att": 90, "def": 86, "strikers": ["Serhou Guirassy", "Karim Adeyemi", "Donyell Malen", "Julian Brandt"]},
+        "Eintracht Frankfurt": {"att": 88, "def": 83, "strikers": ["Hugo Ekitike", "Omar Marmoush", "Mario Götze", "Ansgar Knauff"]},
+        "Freiburg": {"att": 82, "def": 83, "strikers": ["Junior Adamu", "Vincenzo Grifo", "Ritsu Doan"]},
+        "Gladbach": {"att": 81, "def": 79, "strikers": ["Tim Kleindienst", "Alassane Pléa", "Robin Hack"]},
+        "Hamburger SV": {"att": 75, "def": 74, "strikers": ["Robert Glatzel", "Davie Selke", "Jean-Luc Dompé"]},
+        "Hoffenheim": {"att": 82, "def": 78, "strikers": ["Andrej Kramarić", "Adam Hložek", "Mergim Berisha"]},
+        "Köln": {"att": 76, "def": 75, "strikers": ["Tim Lemperle", "Damion Downs", "Linton Maina"]},
+        "Mainz": {"att": 78, "def": 79, "strikers": ["Jonathan Burkardt", "Nadiem Amiri", "Paul Nebel"]},
+        "RB Leipzig": {"att": 90, "def": 87, "strikers": ["Benjamin Šeško", "Loïs Openda", "Xavi Simons", "Yussuf Poulsen"]},
+        "St. Pauli": {"att": 73, "def": 74, "strikers": ["Johannes Eggestein", "Morgan Guilavogui", "Elias Saad"]},
+        "Stuttgart": {"att": 87, "def": 83, "strikers": ["Ermedin Demirović", "Deniz Undav", "Chris Führich", "Enzo Millot"]},
+        "Union Berlin": {"att": 77, "def": 80, "strikers": ["Benedict Hollerbach", "Yorbe Vertessen", "Tom Rothe"]},
+        "Werder Bremen": {"att": 79, "def": 78, "strikers": ["Marvin Ducksch", "Keke Topp", "Mitchell Weiser"]},
+        "Wolfsburg": {"att": 81, "def": 80, "strikers": ["Mohamed Amoura", "Jonas Wind", "Lovro Majer", "Tiago Tomás"]}
     },
     "Ligue 1": {
-        "Angers": {"att": 68, "def": 69, "strikers": ["Farid El Melali", "Lois Diony", "Jim Allevinah"]},
-        "Auxerre": {"att": 68, "def": 68, "strikers": ["Ado Onaiwu", "Lassine Sinayoko", "Gaëtan Perrin"]},
-        "Brest": {"att": 77, "def": 77, "strikers": ["Ludovic Ajorque", "Romain Del Castillo", "Pierre Lees-Melou"]},
-        "Le Havre": {"att": 67, "def": 69, "strikers": ["Emmanuel Sabbi", "Antoine Joujou", "Yassine Kechta"]},
-        "Lens": {"att": 77, "def": 78, "strikers": ["M'Bala Nzola", "Wesley Saïd", "Florian Sotoca"]},
-        "Lille": {"att": 82, "def": 81, "strikers": ["Jonathan David", "Edon Zhegrova", "Rémy Cabella"]},
-        "Lyon": {"att": 81, "def": 77, "strikers": ["Alexandre Lacazette", "Georges Mikautadze", "Malick Fofana"]},
-        "Marseille": {"att": 84, "def": 79, "strikers": ["Mason Greenwood", "Elye Wahi", "Luis Henrique"]},
-        "Monaco": {"att": 83, "def": 80, "strikers": ["Folarin Balogun", "Breel Embolo", "Takumi Minamino"]},
-        "Nantes": {"att": 71, "def": 72, "strikers": ["Mostafa Mohamed", "Moses Simon", "Matthis Abline"]},
-        "Nice": {"att": 79, "def": 80, "strikers": ["Youssoufa Moukoko", "Gaëtan Laborde", "Jérémie Boga"]},
-        "Paris FC": {"att": 67, "def": 67, "strikers": ["Jean-Philippe Krasso", "Nouha Dicko", "Alimami Gory"]},
-        "PSG": {"att": 92, "def": 85, "strikers": ["Ousmane Dembélé", "Bradley Barcola", "Marco Asensio"]},
-        "Reims": {"att": 74, "def": 74, "strikers": ["Keito Nakamura", "Junya Ito", "Oumar Diakité"]},
-        "Rennes": {"att": 78, "def": 76, "strikers": ["Arnaud Kalimuendo", "Ludovic Blas", "Albert Grønbæk"]},
-        "Saint-Étienne": {"att": 68, "def": 69, "strikers": ["Ibrahim Sissoko", "Zuriko Davitashvili", "Lucas Stassin"]},
-        "Strasbourg": {"att": 75, "def": 72, "strikers": ["Emanuel Emegha", "Diego Moreira", "Sebastian Nanasi"]},
-        "Toulouse": {"att": 72, "def": 72, "strikers": ["Zakaria Aboukhlal", "Frank Magri", "Yann Gboho"]}
+        "Angers": {"att": 73, "def": 74, "strikers": ["Farid El Melali", "Lois Diony", "Jim Allevinah"]},
+        "Auxerre": {"att": 73, "def": 73, "strikers": ["Ado Onaiwu", "Lassine Sinayoko", "Gaëtan Perrin"]},
+        "Brest": {"att": 82, "def": 82, "strikers": ["Ludovic Ajorque", "Romain Del Castillo", "Pierre Lees-Melou"]},
+        "Le Havre": {"att": 72, "def": 74, "strikers": ["Emmanuel Sabbi", "Antoine Joujou", "Yassine Kechta"]},
+        "Lens": {"att": 82, "def": 83, "strikers": ["M'Bala Nzola", "Wesley Saïd", "Florian Sotoca", "Angelo Fulgini"]},
+        "Lille": {"att": 87, "def": 86, "strikers": ["Jonathan David", "Edon Zhegrova", "Rémy Cabella", "Hakon Haraldsson"]},
+        "Lyon": {"att": 86, "def": 82, "strikers": ["Alexandre Lacazette", "Georges Mikautadze", "Malick Fofana", "Rayan Cherki"]},
+        "Marseille": {"att": 89, "def": 84, "strikers": ["Mason Greenwood", "Elye Wahi", "Luis Henrique", "Pierre-Emerick Aubameyang"]},
+        "Monaco": {"att": 88, "def": 85, "strikers": ["Folarin Balogun", "Breel Embolo", "Takumi Minamino", "Aleksandr Golovin"]},
+        "Nantes": {"att": 76, "def": 77, "strikers": ["Mostafa Mohamed", "Moses Simon", "Matthis Abline"]},
+        "Nice": {"att": 84, "def": 85, "strikers": ["Youssoufa Moukoko", "Gaëtan Laborde", "Jérémie Boga", "Terem Moffi"]},
+        "Paris FC": {"att": 72, "def": 72, "strikers": ["Jean-Philippe Krasso", "Nouha Dicko", "Alimami Gory"]},
+        "PSG": {"att": 96, "def": 90, "strikers": ["Ousmane Dembélé", "Bradley Barcola", "Marco Asensio", "Gonçalo Ramos"]},
+        "Reims": {"att": 79, "def": 79, "strikers": ["Keito Nakamura", "Junya Ito", "Oumar Diakité"]},
+        "Rennes": {"att": 83, "def": 81, "strikers": ["Arnaud Kalimuendo", "Ludovic Blas", "Albert Grønbæk", "Amine Gouiri"]},
+        "Saint-Étienne": {"att": 73, "def": 74, "strikers": ["Ibrahim Sissoko", "Zuriko Davitashvili", "Lucas Stassin"]},
+        "Strasbourg": {"att": 80, "def": 77, "strikers": ["Emanuel Emegha", "Diego Moreira", "Sebastian Nanasi", "Habib Diallo"]},
+        "Toulouse": {"att": 77, "def": 77, "strikers": ["Zakaria Aboukhlal", "Frank Magri", "Yann Gboho"]}
     }
 }
 
@@ -318,18 +317,18 @@ else:
 
         with st.expander("⚽ Analisi Probabilità Marcatori delle Squadre", expanded=False):
             m_col1, m_col2 = st.columns(2)
-            weights = [0.44, 0.32, 0.22]
+            weights = [0.38, 0.28, 0.20, 0.14]
             
             with m_col1:
                 st.markdown(f"**Marcatori {home_team}**")
                 for idx, player in enumerate(h_data["strikers"]):
-                    prob_scorer = min(round(weights[idx] * (home_xg / 1.35) * 100, 1), 82.0)
+                    prob_scorer = min(round(weights[idx] * (home_xg / 1.35) * 100, 1), 85.0)
                     st.write(f"• **{player}**: `{prob_scorer}%`")
                     st.progress(prob_scorer / 100)
                     
             with m_col2:
                 st.markdown(f"**Marcatori {away_team}**")
                 for idx, player in enumerate(a_data["strikers"]):
-                    prob_scorer = min(round(weights[idx] * (away_xg / 1.05) * 100, 1), 82.0)
+                    prob_scorer = min(round(weights[idx] * (away_xg / 1.05) * 100, 1), 85.0)
                     st.write(f"• **{player}**: `{prob_scorer}%`")
                     st.progress(prob_scorer / 100)
