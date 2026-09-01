@@ -24,19 +24,28 @@ def get_dynamic_database(competition_code):
             data = response.json()
             table = data["standings"][0]["table"]
             teams_data = {}
+            
+            total_games = sum(row["playedGames"] for row in table)
+            league_avg_gf = (sum(row["goalsFor"] for row in table) / total_games) if total_games > 0 else 1.35
+            league_avg_ga = league_avg_gf
+
             for row in table:
                 team_name = row["team"]["name"]
                 played = row["playedGames"]
-                if played > 0:
-                    gf_per_match = row["goalsFor"] / played
-                    ga_per_match = row["goalsAgainst"] / played
-                else:
-                    gf_per_match, ga_per_match = 1.0, 1.0
+                gf = row["goalsFor"]
+                ga = row["goalsAgainst"]
                 
-                # Valutazioni dinamiche basate sui gol reali in classifica
+                gf_per_match = (gf / played) if played > 0 else league_avg_gf
+                ga_per_match = (ga / played) if played > 0 else league_avg_ga
+                
+                # Sistema di smoothing per stabilizzare le prime giornate
+                weight = played / (played + 4.0)
+                smooth_gf = (gf_per_match * weight) + (league_avg_gf * (1 - weight))
+                smooth_ga = (ga_per_match * weight) + (league_avg_ga * (1 - weight))
+                
                 teams_data[team_name] = {
-                    "att": round(75 + (gf_per_match * 6), 1),
-                    "def": round(75 + (ga_per_match * 6), 1),
+                    "att": round(78 + ((smooth_gf - league_avg_gf) * 9), 1),
+                    "def": round(78 + ((league_avg_ga - smooth_ga) * 9), 1),
                     "strikers": [f"Capocannoniere {team_name}", "Rigorista", "Jolly d'attacco", "Esterno offensivo"]
                 }
             return teams_data
@@ -89,7 +98,7 @@ with col_sel1:
     league_name = st.selectbox("🌐 Campionato", list(leagues_map.keys()))
     competition_code = leagues_map[league_name]
 
-# Caricamento dinamico dal web
+# Caricamento dinamico dal web con correzione di stabilità
 FOOTBALL_DATABASE = get_dynamic_database(competition_code)
 
 if not FOOTBALL_DATABASE:
@@ -160,11 +169,11 @@ else:
 
             total_xg = home_xg + away_xg
             if total_xg > 3.2:
-                match_narrative = f"🔥 **Analisi Tattica del Match:** Sarà una partita **estremamente aperta e ad alto potenziale offensivo**, visti i dati reali di gol realizzati dalle due squadre in campionato."
+                match_narrative = f"🔥 **Analisi Tattica del Match:** Sarà una partita **estremamente aperta, intensa e ad alto potenziale offensivo**. Entrambe le squadre vantano reparti d'attacco dinamici e difese che potrebbero concedere spazi, lasciando presagire un incontro ricco di ribaltamenti di fronte e occasioni da rete."
             elif total_xg < 2.2:
-                match_narrative = f"🔒 **Analisi Tattica del Match:** Ci attende una sfida **molto chiusa e difensivamente accorta**, con reparti che concedono pochi spazi in base alle statistiche attuali."
+                match_narrative = f"🔒 **Analisi Tattica del Match:** Ci attende una sfida **molto tattica, bloccata e difensivamente accorta**. Le due squadre tenderanno a rischiare il meno possibile, bloccando le linee di passaggio per mantenere equilibri stretti."
             else:
-                match_narrative = f"⚖️ **Analisi Tattica del Match:** Sarà una gara **equilibrata e incerta**, dove i dettagli e la gestione del possesso palla faranno la differenza."
+                match_narrative = f"⚖️ **Analisi Tattica del Match:** Sarà una gara **equilibrata e giocata a scacchi**, caratterizzata da fasi alterne di controllo del gioco e grande attenzione ai dettagli tattici."
 
             st.markdown(f'<div class="match-analysis-box">{match_narrative}</div>', unsafe_allow_html=True)
 
@@ -183,6 +192,7 @@ else:
                     st.markdown(f'<div class="stat-box">Entrambe a Segno (Goal): <strong style="color:#00c6ff;">{round(prob_gg, 1)}%</strong></div>', unsafe_allow_html=True)
                     st.markdown(f'<div class="stat-box">No Goal (NG): <strong style="color:#ffb703;">{round(prob_ng, 1)}%</strong></div>', unsafe_allow_html=True)
                 with col_s2:
+                    st.markdown(f'<div class="stat-box">Over 1.5 Gol: <strong style="color:#00f2fe;">{round(prob_over15, 1)}%</strong></div>', unsafe_allow_html=True)
                     st.markdown(f'<div class="stat-box">Over 2.5 Gol: <strong style="color:#00c6ff;">{round(prob_over25, 1)}%</strong></div>', unsafe_allow_html=True)
                     st.markdown(f'<div class="stat-box">Under 2.5 Gol: <strong style="color:#ffb703;">{round(prob_under25, 1)}%</strong></div>', unsafe_allow_html=True)
 
@@ -199,3 +209,21 @@ else:
                                 <span style="color:#00f2fe; font-size:0.9rem;">{round(prob, 1)}%</span>
                             </div>
                         """, unsafe_allow_html=True)
+
+            with st.expander("⚽ Analisi Probabilità Marcatori delle Squadre", expanded=False):
+                m_col1, m_col2 = st.columns(2)
+                weights = [0.38, 0.28, 0.20, 0.14]
+                
+                with m_col1:
+                    st.markdown(f"**reparto offensivo {home_team}**")
+                    for idx, player in enumerate(h_data["strikers"]):
+                        prob_scorer = min(round(weights[idx] * (home_xg / 1.35) * 100, 1), 85.0)
+                        st.write(f"• **{player}**: `{prob_scorer}%`")
+                        st.progress(prob_scorer / 100)
+                        
+                with m_col2:
+                    st.markdown(f"**reparto offensivo {away_team}**")
+                    for idx, player in enumerate(a_data["strikers"]):
+                        prob_scorer = min(round(weights[idx] * (away_xg / 1.05) * 100, 1), 85.0)
+                        st.write(f"• **{player}**: `{prob_scorer}%`")
+                        st.progress(prob_scorer / 100)
