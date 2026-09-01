@@ -10,8 +10,7 @@ st.set_page_config(
 )
 
 # --- CONFIGURAZIONE API ---
-# Inserisci qui la tua API Key gratuita ottenuta da football-data.org
-API_KEY = "LA_TUA_API_KEY_QUI"
+API_KEY = "98ba0f8782444519931d382828466579"
 BASE_URL = "https://api.football-data.org/v4/"
 
 headers = {"X-Auth-Token": API_KEY}
@@ -38,7 +37,7 @@ def get_dynamic_database(competition_code):
                 teams_data[team_name] = {
                     "att": round(75 + (gf_per_match * 6), 1),
                     "def": round(75 + (ga_per_match * 6), 1),
-                    "strikers": [f"Capocannoniere {team_name}", "Rigorista", "Jolly d'attacco"]
+                    "strikers": [f"Capocannoniere {team_name}", "Rigorista", "Jolly d'attacco", "Esterno offensivo"]
                 }
             return teams_data
     except Exception:
@@ -94,7 +93,7 @@ with col_sel1:
 FOOTBALL_DATABASE = get_dynamic_database(competition_code)
 
 if not FOOTBALL_DATABASE:
-    st.error("⚠️ Impossibile scaricare i dati. Assicurati di aver inserito correttamente la tua API Key gratuita di football-data.org nel codice.")
+    st.error("⚠️ Impossibile scaricare i dati. Verifica che la chiave API sia attiva o che il campionato sia attualmente coperto dal piano gratuito.")
 else:
     teams_list = sorted(list(FOOTBALL_DATABASE.keys()))
 
