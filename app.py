@@ -38,7 +38,7 @@ def get_dynamic_database(competition_code):
                 gf_per_match = (gf / played) if played > 0 else league_avg_gf
                 ga_per_match = (ga / played) if played > 0 else league_avg_ga
                 
-                # Sistema di smoothing per stabilizzare le prime giornate
+                # Smoothing per le prime giornate
                 weight = played / (played + 4.0)
                 smooth_gf = (gf_per_match * weight) + (league_avg_gf * (1 - weight))
                 smooth_ga = (ga_per_match * weight) + (league_avg_ga * (1 - weight))
@@ -98,7 +98,6 @@ with col_sel1:
     league_name = st.selectbox("🌐 Campionato", list(leagues_map.keys()))
     competition_code = leagues_map[league_name]
 
-# Caricamento dinamico dal web con correzione di stabilità
 FOOTBALL_DATABASE = get_dynamic_database(competition_code)
 
 if not FOOTBALL_DATABASE:
@@ -127,7 +126,7 @@ else:
             prob_matrix = np.zeros((max_goals, max_goals))
             exact_scores = []
             
-            prob_over15 = prob_over25 = prob_under25 = prob_gg = prob_ng = 0.0
+            prob_over25 = prob_under25 = prob_gg = prob_ng = 0.0
 
             for h in range(max_goals):
                 for a in range(max_goals):
@@ -136,7 +135,6 @@ else:
                     exact_scores.append((f"{h} - {a}", p * 100))
 
                     total_goals = h + a
-                    if total_goals > 1.5: prob_over15 += p
                     if total_goals > 2.5: prob_over25 += p
                     else: prob_under25 += p
                     
@@ -147,8 +145,17 @@ else:
             draw = float(np.sum(np.diag(prob_matrix))) * 100
             away_win = float(np.sum(np.triu(prob_matrix, 1))) * 100
 
-            prob_over15 *= 100; prob_over25 *= 100; prob_under25 *= 100
+            prob_over25 *= 100; prob_under25 *= 100
             prob_gg *= 100; prob_ng *= 100
+
+            # Calcolo stime per Angoli e Cartellini
+            expected_corners = round(8.5 + ((home_xg + away_xg) * 0.9), 1)
+            prob_over95_corners = min(round(50 + ((expected_corners - 9.5) * 12), 1), 88.0)
+            prob_over95_corners = max(prob_over95_corners, 15.0)
+
+            expected_cards = round(3.8 + (abs(h_data["def"] - a_data["def"]) * 0.05), 1)
+            prob_over35_cards = min(round(50 + ((expected_cards - 4.0) * 15), 1), 90.0)
+            prob_over35_cards = max(prob_over35_cards, 20.0)
 
             c1, c2, c3 = st.columns(3)
             with c1:
@@ -161,7 +168,7 @@ else:
             st.markdown("<br>", unsafe_allow_html=True)
             st.markdown(f"""
                 <div class="xg-box">
-                    ⚽ <strong>Expected Goals (xG) Calcolati in Base ai Dati Reali:</strong> &nbsp; 
+                    ⚽ <strong>Expected Goals (xG):</strong> &nbsp; 
                     <span style="color: #00f2fe;">{home_team} ({round(home_xg, 2)})</span> &nbsp;—&nbsp; 
                     <span style="color: #ff007f;">({round(away_xg, 2)}) {away_team}</span>
                 </div>
@@ -169,11 +176,11 @@ else:
 
             total_xg = home_xg + away_xg
             if total_xg > 3.2:
-                match_narrative = f"🔥 **Analisi Tattica del Match:** Sarà una partita **estremamente aperta, intensa e ad alto potenziale offensivo**. Entrambe le squadre vantano reparti d'attacco dinamici e difese che potrebbero concedere spazi, lasciando presagire un incontro ricco di ribaltamenti di fronte e occasioni da rete."
+                match_narrative = f"🔥 **Analisi Tattica del Match:** Partita **aperta e ad altissimo potenziale offensivo**, con ritmi alti e occasioni da rete frequenti su entrambi i fronti."
             elif total_xg < 2.2:
-                match_narrative = f"🔒 **Analisi Tattica del Match:** Ci attende una sfida **molto tattica, bloccata e difensivamente accorta**. Le due squadre tenderanno a rischiare il meno possibile, bloccando le linee di passaggio per mantenere equilibri stretti."
+                match_narrative = f"🔒 **Analisi Tattica del Match:** Gara **bloccata e difensivamente accorta**, con reparti molto bassi e spazi ridotti al minimo."
             else:
-                match_narrative = f"⚖️ **Analisi Tattica del Match:** Sarà una gara **equilibrata e giocata a scacchi**, caratterizzata da fasi alterne di controllo del gioco e grande attenzione ai dettagli tattici."
+                match_narrative = f"⚖️ **Analisi Tattica del Match:** Incontro **equilibrato e tattico**, deciso dai singoli episodi e dalla gestione del possesso."
 
             st.markdown(f'<div class="match-analysis-box">{match_narrative}</div>', unsafe_allow_html=True)
 
@@ -182,19 +189,24 @@ else:
 
             st.success(f"""
                 💡 **SINTESI SCHEDINA CONSIGLIATA:**
-                * ⚽ **Linea Gol Consigliata:** `{best_goals}` (Over 1.5 al {round(prob_over15, 1)}%)
+                * ⚽ **Linea Gol Consigliata:** `{best_goals}`
                 * 🥅 **Opzione Entrambe a Segno:** `{best_gg_ng}`
+                * 🚩 **Angoli Stimati:** `Over 9.5` ({prob_over95_corners}%)
+                * 🟨 **Cartellini Stimati:** `Over 3.5` ({prob_over35_cards}%)
             """)
 
-            with st.expander("📊 Statistiche Dettagliate Mercati", expanded=True):
+            with st.expander("📊 Statistiche Dettagliate Mercati (Gol, Angoli, Cartellini)", expanded=True):
                 col_s1, col_s2 = st.columns(2)
                 with col_s1:
                     st.markdown(f'<div class="stat-box">Entrambe a Segno (Goal): <strong style="color:#00c6ff;">{round(prob_gg, 1)}%</strong></div>', unsafe_allow_html=True)
                     st.markdown(f'<div class="stat-box">No Goal (NG): <strong style="color:#ffb703;">{round(prob_ng, 1)}%</strong></div>', unsafe_allow_html=True)
-                with col_s2:
-                    st.markdown(f'<div class="stat-box">Over 1.5 Gol: <strong style="color:#00f2fe;">{round(prob_over15, 1)}%</strong></div>', unsafe_allow_html=True)
                     st.markdown(f'<div class="stat-box">Over 2.5 Gol: <strong style="color:#00c6ff;">{round(prob_over25, 1)}%</strong></div>', unsafe_allow_html=True)
                     st.markdown(f'<div class="stat-box">Under 2.5 Gol: <strong style="color:#ffb703;">{round(prob_under25, 1)}%</strong></div>', unsafe_allow_html=True)
+                with col_s2:
+                    st.markdown(f'<div class="stat-box">Media Angoli Previsti: <strong style="color:#00f2fe;">{expected_corners}</strong></div>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="stat-box">Probabilità Over 9.5 Angoli: <strong style="color:#00f2fe;">{prob_over95_corners}%</strong></div>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="stat-box">Media Cartellini Previsti: <strong style="color:#ffb703;">{expected_cards}</strong></div>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="stat-box">Probabilità Over 3.5 Cartellini: <strong style="color:#ffb703;">{prob_over35_cards}%</strong></div>', unsafe_allow_html=True)
 
             with st.expander("🎯 I 5 Risultati Esatti più probabili", expanded=True):
                 exact_scores.sort(key=lambda x: x[1], reverse=True)
@@ -215,14 +227,14 @@ else:
                 weights = [0.38, 0.28, 0.20, 0.14]
                 
                 with m_col1:
-                    st.markdown(f"**reparto offensivo {home_team}**")
+                    st.markdown(f"**Reparto Offensivo {home_team}**")
                     for idx, player in enumerate(h_data["strikers"]):
                         prob_scorer = min(round(weights[idx] * (home_xg / 1.35) * 100, 1), 85.0)
                         st.write(f"• **{player}**: `{prob_scorer}%`")
                         st.progress(prob_scorer / 100)
                         
                 with m_col2:
-                    st.markdown(f"**reparto offensivo {away_team}**")
+                    st.markdown(f"**Reparto Offensivo {away_team}**")
                     for idx, player in enumerate(a_data["strikers"]):
                         prob_scorer = min(round(weights[idx] * (away_xg / 1.05) * 100, 1), 85.0)
                         st.write(f"• **{player}**: `{prob_scorer}%`")
