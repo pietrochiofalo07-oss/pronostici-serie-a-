@@ -125,7 +125,7 @@ leagues_map = {
     "Ligue 1": "FL1"
 }
 
-# --- CUSTOM CSS PER COLORI E DESIGN MODERNO ---
+# --- CUSTOM CSS ---
 st.markdown("""
     <style>
     .stApp {
@@ -174,11 +174,18 @@ st.markdown("""
         color: #34d399;
         font-weight: 600;
     }
+    .combo-box {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.05) 100%);
+        border: 1px solid rgba(52, 211, 153, 0.4);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 15px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="main-title">⚡ EUROPE AI PREDICTOR PRO</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">Modello Matematico Avanzato & Interfaccia Minimal Pro</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">Modello Matematico Avanzato & Smart Combo Finder</div>', unsafe_allow_html=True)
 
 col_sel1, col_sel2, col_sel3 = st.columns(3)
 with col_sel1:
@@ -200,7 +207,7 @@ else:
     if home_team == away_team:
         st.warning("⚠️ Seleziona due squadre diverse.")
     else:
-        if st.button("🚀 ESEGUI ANALISI", type="primary", use_container_width=True):
+        if st.button("🚀 ESEGUI ANALISI & COMBO", type="primary", use_container_width=True):
             h_data = FOOTBALL_DATABASE[home_team]
             a_data = FOOTBALL_DATABASE[away_team]
             
@@ -212,7 +219,7 @@ else:
             
             max_goals = 6
             prob_matrix = np.zeros((max_goals, max_goals))
-            prob_over25 = prob_under25 = prob_gg = 0.0
+            prob_over15 = prob_over25 = prob_under35 = prob_gg = 0.0
 
             rho = -0.10 
 
@@ -232,8 +239,9 @@ else:
                     p = max(0.0, p)
                     prob_matrix[h, a] = p
                     
+                    if (h + a) > 1.5: prob_over15 += p
                     if (h + a) > 2.5: prob_over25 += p
-                    else: prob_under25 += p
+                    if (h + a) < 3.5: prob_under35 += p
                     if h > 0 and a > 0: prob_gg += p
 
             total_sum = np.sum(prob_matrix)
@@ -243,15 +251,47 @@ else:
             home_win = float(np.sum(np.tril(prob_matrix, -1))) * 100
             draw = float(np.sum(np.diag(prob_matrix))) * 100
             away_win = float(np.sum(np.triu(prob_matrix, 1))) * 100
+            h_or_draw = home_win + draw
+            a_or_draw = away_win + draw
 
+            prob_over15 *= 100
             prob_over25 *= 100
+            prob_under35 *= 100
             prob_gg *= 100
 
             expected_corners = round((h_data["avg_corners"] + a_data["avg_corners"]) * 0.95, 1)
             expected_cards = round((h_data["avg_cards"] + a_data["avg_cards"]) * 0.9, 1)
 
+            # --- MOTORE DI SCELTA SMART COMBO ---
+            combos = []
+            if home_win > 45:
+                combos.append(("1 + Over 1.5", home_win * (prob_over15/100), 1.65))
+                combos.append(("1X + Under 3.5", h_or_draw * (prob_under35/100), 1.45))
+            elif away_win > 40:
+                combos.append(("2 + Over 1.5", away_win * (prob_over15/100), 1.85))
+                combos.append(("X2 + Over 1.5", a_or_draw * (prob_over15/100), 1.50))
+            else:
+                combos.append(("1X + Over 1.5", h_or_draw * (prob_over15/100), 1.40))
+                
+            if prob_gg > 55:
+                combos.append(("Goal + Over 2.5", prob_gg * (prob_over25/100), 2.10))
+            
+            # Seleziona la combo con la probabilità ponderata migliore
+            best_combo = max(combos, key=lambda x: x[1]) if combos else ("1X + Over 1.5", 70.0, 1.45)
+
             st.markdown("<br>", unsafe_allow_html=True)
             
+            # --- BOX SPECIALE: LA COMBO CONSIGLIATA ---
+            st.markdown(f"""
+                <div class="combo-box">
+                    <div style="font-size: 1.2rem; font-weight: 800; color: #34d399; margin-bottom: 5px;">🔥 LA COMBO CONSIGLIATA DALL'AI</div>
+                    <div style="font-size: 1.4rem; font-weight: bold; color: #ffffff; margin-bottom: 10px;">{best_combo[0]} <span style="font-size: 1rem; color: #38bdf8; float: right;">Quota stimata: ~{best_combo[2]}</span></div>
+                    <div style="font-size: 0.9rem; color: #d1d5db;">
+                        Probabilità di successo stimata dal modello: <b>{round(best_combo[1], 1)}%</b>. Questa selezione bilancia il rendimento recente delle squadre e la tendenza dei gol.
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+
             # --- BOX 1: Schedina & Esiti ---
             st.markdown(f"""
                 <div class="card-box">
