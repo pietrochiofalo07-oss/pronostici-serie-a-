@@ -262,21 +262,30 @@ else:
             expected_corners = round((h_data["avg_corners"] + a_data["avg_corners"]) * 0.95, 1)
             expected_cards = round((h_data["avg_cards"] + a_data["avg_cards"]) * 0.9, 1)
 
-            # --- MOTORE DI SCELTA SMART COMBO ---
+            # --- MOTORE DI SCELTA SMART COMBO (AGGIORNATO CON GESTIONE PARTITE DIFFICILI) ---
             combos = []
-            if home_win > 45:
-                combos.append(("1 + Over 1.5", home_win * (prob_over15/100), 1.65))
+            
+            # Se la partita è equilibrata/difficile (nessuna delle due ha > 45% di vittoria secca)
+            if abs(home_win - away_win) < 15.0 or (home_win < 45 and away_win < 40):
                 combos.append(("1X + Under 3.5", h_or_draw * (prob_under35/100), 1.45))
-            elif away_win > 40:
-                combos.append(("2 + Over 1.5", away_win * (prob_over15/100), 1.85))
-                combos.append(("X2 + Over 1.5", a_or_draw * (prob_over15/100), 1.50))
+                combos.append(("1X + Over 1.5", h_or_draw * (prob_over15/100), 1.50))
+                combos.append(("X2 + Over 1.5", a_or_draw * (prob_over15/100), 1.60))
+                if prob_gg > 50:
+                    combos.append(("1X + Goal", h_or_draw * (prob_gg/100), 1.85))
             else:
-                combos.append(("1X + Over 1.5", h_or_draw * (prob_over15/100), 1.40))
-                
-            if prob_gg > 55:
+                # Partita più sbilanciata
+                if home_win > 45:
+                    combos.append(("1 + Over 1.5", home_win * (prob_over15/100), 1.65))
+                    combos.append(("1X + Under 3.5", h_or_draw * (prob_under35/100), 1.45))
+                elif away_win > 40:
+                    combos.append(("2 + Over 1.5", away_win * (prob_over15/100), 1.85))
+                    combos.append(("X2 + Over 1.5", a_or_draw * (prob_over15/100), 1.50))
+                else:
+                    combos.append(("1X + Over 1.5", h_or_draw * (prob_over15/100), 1.40))
+                    
+            if prob_gg > 55 and not any("Goal" in c[0] for c in combos):
                 combos.append(("Goal + Over 2.5", prob_gg * (prob_over25/100), 2.10))
             
-            # Seleziona la combo con la probabilità ponderata migliore
             best_combo = max(combos, key=lambda x: x[1]) if combos else ("1X + Over 1.5", 70.0, 1.45)
 
             st.markdown("<br>", unsafe_allow_html=True)
@@ -287,7 +296,7 @@ else:
                     <div style="font-size: 1.2rem; font-weight: 800; color: #34d399; margin-bottom: 5px;">🔥 LA COMBO CONSIGLIATA DALL'AI</div>
                     <div style="font-size: 1.4rem; font-weight: bold; color: #ffffff; margin-bottom: 10px;">{best_combo[0]} <span style="font-size: 1rem; color: #38bdf8; float: right;">Quota stimata: ~{best_combo[2]}</span></div>
                     <div style="font-size: 0.9rem; color: #d1d5db;">
-                        Probabilità di successo stimata dal modello: <b>{round(best_combo[1], 1)}%</b>. Questa selezione bilancia il rendimento recente delle squadre e la tendenza dei gol.
+                        Probabilità di successo stimata dal modello: <b>{round(best_combo[1], 1)}%</b>. (Gestione automatica 1X/X2 attivata per match ad alto equilibrio o difficoltà).
                     </div>
                 </div>
             """, unsafe_allow_html=True)
