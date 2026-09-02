@@ -15,7 +15,6 @@ BASE_URL = "https://api.football-data.org/v4/"
 
 headers = {"X-Auth-Token": API_KEY}
 
-# Database aggiornato con i trasferimenti e i giocatori chiave
 KNOWN_PLAYERS = {
     "AC Milan": ["Gonçalo Ramos", "Christian Pulisic", "Tijjani Reijnders", "Rafael Leão"],
     "Inter Milano": ["Lautaro Martínez", "Marcus Thuram", "Hakan Çalhanoğlu", "Henrikh Mkhitaryan"],
@@ -33,10 +32,6 @@ KNOWN_PLAYERS = {
 
 @st.cache_data(ttl=3600)
 def get_advanced_database(competition_code):
-    """
-    Scarica la classifica generale, casa, trasferta e calcola metriche avanzate 
-    estese (Clean Sheet Rate, Goal Difference, Momentum e Indici di Rischio).
-    """
     try:
         res_total = requests.get(f"{BASE_URL}competitions/{competition_code}/standings?standingType=TOTAL", headers=headers)
         res_home = requests.get(f"{BASE_URL}competitions/{competition_code}/standings?standingType=HOME", headers=headers)
@@ -130,8 +125,60 @@ leagues_map = {
     "Ligue 1": "FL1"
 }
 
-st.markdown("<h2 style='text-align: center;'>⚡ EUROPE AI PREDICTOR PRO</h2>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: gray;'>Modello Matematico Avanzato & Interfaccia Minimal</p>", unsafe_allow_html=True)
+# --- CUSTOM CSS PER COLORI E DESIGN MODERNO ---
+st.markdown("""
+    <style>
+    .stApp {
+        background: linear-gradient(135deg, #0b0f19 0%, #111827 100%);
+        color: #f3f4f6;
+    }
+    .main-title {
+        font-size: 2.2rem;
+        font-weight: 800;
+        text-align: center;
+        background: linear-gradient(90deg, #38bdf8 0%, #818cf8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0px;
+    }
+    .sub-title {
+        text-align: center;
+        color: #9ca3af;
+        font-size: 0.85rem;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin-bottom: 25px;
+    }
+    .card-box {
+        background: rgba(31, 41, 55, 0.6);
+        border: 1px solid rgba(75, 85, 99, 0.4);
+        border-radius: 12px;
+        padding: 20px;
+        backdrop-filter: blur(8px);
+        margin-bottom: 15px;
+    }
+    .card-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #38bdf8;
+        margin-bottom: 15px;
+        border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+        padding-bottom: 8px;
+    }
+    .metric-item {
+        font-size: 0.95rem;
+        color: #e5e7eb;
+        margin-bottom: 8px;
+    }
+    .highlight {
+        color: #34d399;
+        font-weight: 600;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+st.markdown('<div class="main-title">⚡ EUROPE AI PREDICTOR PRO</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">Modello Matematico Avanzato & Interfaccia Minimal Pro</div>', unsafe_allow_html=True)
 
 col_sel1, col_sel2, col_sel3 = st.columns(3)
 with col_sel1:
@@ -157,7 +204,6 @@ else:
             h_data = FOOTBALL_DATABASE[home_team]
             a_data = FOOTBALL_DATABASE[away_team]
             
-            # Calcolo xG con bilanciamento Casa/Trasferta e Momentum
             home_power = (h_data["home_gf"] + a_data["away_ga"]) / 2
             away_power = (a_data["away_gf"] + h_data["home_ga"]) / 2
             
@@ -168,14 +214,12 @@ else:
             prob_matrix = np.zeros((max_goals, max_goals))
             prob_over25 = prob_under25 = prob_gg = 0.0
 
-            # Correzione di Dixon-Coles semplificata per calibrare lo 0-0 e l'1-1
             rho = -0.10 
 
             for h in range(max_goals):
                 for a in range(max_goals):
                     p = poisson.pmf(h, home_xg) * poisson.pmf(a, away_xg)
                     
-                    # Applicazione correzione punteggi bassi
                     if h == 0 and a == 0:
                         p *= (1 - home_xg * away_xg * rho)
                     elif h == 0 and a == 1:
@@ -192,7 +236,6 @@ else:
                     else: prob_under25 += p
                     if h > 0 and a > 0: prob_gg += p
 
-            # Normalizzazione matrice
             total_sum = np.sum(prob_matrix)
             if total_sum > 0:
                 prob_matrix /= total_sum
@@ -207,39 +250,50 @@ else:
             expected_corners = round((h_data["avg_corners"] + a_data["avg_corners"]) * 0.95, 1)
             expected_cards = round((h_data["avg_cards"] + a_data["avg_cards"]) * 0.9, 1)
 
-            st.markdown("---")
+            st.markdown("<br>", unsafe_allow_html=True)
             
-            # --- BOX 1: Schedina & Esiti (Minimal & Clean) ---
-            with st.container():
-                st.markdown(f"#### 📊 1. Pronostici & Mercato: {home_team} vs {away_team}")
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric(label="Esito 1X2 Principale", value=f"1 ({round(home_win, 1)}%)", delta=f"X: {round(draw, 1)}% | 2: {round(away_win, 1)}%")
-                    st.metric(label="Entrambe a Segno (Goal)", value=f"{round(prob_gg, 1)}%")
-                with col2:
-                    st.metric(label="Expected Goals (xG)", value=f"{round(home_xg, 2)} — {round(away_xg, 2)}")
-                    st.metric(label="Linea Gol Consigliata", value="OVER 2.5" if prob_over25 > 50 else "UNDER 2.5", delta=f"{round(prob_over25, 1)}% Over")
-
-                st.info(f"🚩 **Angoli stimati:** `{expected_corners}` &nbsp;|&nbsp; 🟨 **Cartellini stimati:** `{expected_cards}`")
-
-            st.markdown("---")
+            # --- BOX 1: Schedina & Esiti ---
+            st.markdown(f"""
+                <div class="card-box">
+                    <div class="card-title">📊 1. Pronostici & Mercato: {home_team} vs {away_team}</div>
+                    <div style="display: flex; justify-content: space-between; gap: 20px;">
+                        <div style="flex: 1;">
+                            <div class="metric-item">🎯 <b>1X2 Principale:</b> <span class="highlight">1 ({round(home_win, 1)}%)</span> | X: {round(draw, 1)}% | 2: {round(away_win, 1)}%</div>
+                            <div class="metric-item">🥅 <b>Entrambe a Segno (Goal):</b> <span class="highlight">{round(prob_gg, 1)}%</span></div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div class="metric-item">⚽ <b>Expected Goals (xG):</b> <span class="highlight">{round(home_xg, 2)} — {round(away_xg, 2)}</span></div>
+                            <div class="metric-item">📈 <b>Linea Gol:</b> <span class="highlight">{'OVER 2.5' if prob_over25 > 50 else 'UNDER 2.5'} ({round(prob_over25, 1)}%)</span></div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); font-size: 0.9rem; color: #9ca3af;">
+                        🚩 <b>Angoli stimati:</b> {expected_corners} &nbsp;&nbsp;|&nbsp;&nbsp; 🟨 <b>Cartellini stimati:</b> {expected_cards}
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
 
             # --- BOX 2: Metriche di Squadra e Forma ---
-            with st.container():
-                st.markdown("#### 📈 2. Trend & Metriche Avanzate a Confronto")
-                col_m1, col_m2 = st.columns(2)
-                with col_m1:
-                    st.markdown(f"**🏠 {home_team}**")
-                    st.write(f"• Win Rate Totale: **{h_data['win_rate']}%**")
-                    st.write(f"• Win Rate Casa: **{h_data['home_win_rate']}%**")
-                    st.write(f"• Clean Sheet Prob: **{h_data['clean_sheets_prob']}%**")
-                    st.write(f"• Forma Recente: `{h_data['form_sequence']}`")
-                with col_m2:
-                    st.markdown(f"**✈️ {away_team}**")
-                    st.write(f"• Win Rate Totale: **{a_data['win_rate']}%**")
-                    st.write(f"• Win Rate Trasferta: **{a_data['away_win_rate']}%**")
-                    st.write(f"• Clean Sheet Prob: **{a_data['clean_sheets_prob']}%**")
-                    st.write(f"• Forma Recente: `{a_data['form_sequence']}`")
+            st.markdown(f"""
+                <div class="card-box">
+                    <div class="card-title">📈 2. Trend & Metriche Avanzate a Confronto</div>
+                    <div style="display: flex; justify-content: space-between; gap: 20px;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; color: #38bdf8; margin-bottom: 8px;">🏠 {home_team}</div>
+                            <div class="metric-item">• Win Rate Totale: <b>{h_data['win_rate']}%</b></div>
+                            <div class="metric-item">• Win Rate Casa: <b>{h_data['home_win_rate']}%</b></div>
+                            <div class="metric-item">• Clean Sheet: <b>{h_data['clean_sheets_prob']}%</b></div>
+                            <div class="metric-item">• Forma: <span style="font-family: monospace; color: #34d399;">{h_data['form_sequence']}</span></div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; color: #818cf8; margin-bottom: 8px;">✈️ {away_team}</div>
+                            <div class="metric-item">• Win Rate Totale: <b>{a_data['win_rate']}%</b></div>
+                            <div class="metric-item">• Win Rate Trasferta: <b>{a_data['away_win_rate']}%</b></div>
+                            <div class="metric-item">• Clean Sheet: <b>{a_data['clean_sheets_prob']}%</b></div>
+                            <div class="metric-item">• Forma: <span style="font-family: monospace; color: #34d399;">{a_data['form_sequence']}</span></div>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
 
             # --- SEZIONE EXTRA: Probabilità Marcatori con Barre ---
             with st.expander("⚽ Probabilità Goal Marcatori Chiave"):
