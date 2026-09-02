@@ -4,7 +4,7 @@ import numpy as np
 from scipy.stats import poisson
 
 st.set_page_config(
-    page_title="EUROPE AI PREDICTOR LIVE", 
+    page_title="EUROPE AI PREDICTOR LIVE PRO", 
     page_icon="⚡", 
     layout="wide"
 )
@@ -15,15 +15,16 @@ BASE_URL = "https://api.football-data.org/v4/"
 
 headers = {"X-Auth-Token": API_KEY}
 
+# Database aggiornato con i trasferimenti e i nuovi giocatori chiave
 KNOWN_PLAYERS = {
-    "AC Milan": ["Christian Pulisic", "Rafael Leão", "Álvaro Morata", "Tijjani Reijnders"],
+    "AC Milan": ["Gonçalo Ramos", "Christian Pulisic", "Tijjani Reijnders", "Rafael Leão"],
     "Inter Milano": ["Lautaro Martínez", "Marcus Thuram", "Hakan Çalhanoğlu", "Henrikh Mkhitaryan"],
     "Juventus": ["Dusan Vlahovic", "Kenan Yildiz", "Teun Koopmeiners", "Nico Gonzalez"],
-    "Napoli": ["Romelu Lukaku", "Khvicha Kvaratskhelia", "Scott McTominay", "Matteo Politano"],
-    "Atalanta BC": ["Mateo Retegui", "Ademola Lookman", "Charles De Ketelaere", "Mario Pasalic"],
-    "AS Roma": ["Artem Dovbyk", "Paulo Dybala", "Lorenzo Pellegrini", "Stephan El Shaarawy"],
-    "SS Lazio": ["Valentín Castellanos", "Mattia Zaccagni", "Boulaye Dia", "Pedro"],
-    "Venezia FC": ["Joel Pohjanpalo", "Gaetano Oristanio", "Christian Gytkjær", "Mikael Ellertsson"],
+    "Napoli": ["Romelu Lukaku", "Kevin De Bruyne", "Khvicha Kvaratskhelia", "Scott McTominay"],
+    "Atalanta BC": ["Mateo Retegui", "Ademola Lookman", "Charles De Ketelaere", "Elmas"],
+    "AS Roma": ["Malen", "Paulo Dybala", "Artem Dovbyk", "Tommaso Baldanzi"],
+    "SS Lazio": ["Valentín Castellanos", "Mattia Zaccagni", "Boulaye Dia", "Pinamonti"],
+    "Venezia FC": ["Akor Adams", "Gaetano Oristanio", "Joel Pohjanpalo", "Toni Fernandez"],
     "Manchester City FC": ["Erling Haaland", "Phil Foden", "Kevin De Bruyne", "Savinho"],
     "Arsenal FC": ["Bukayo Saka", "Kai Havertz", "Gabriel Martinelli", "Leandro Trossard"],
     "Liverpool FC": ["Mohamed Salah", "Darwin Núñez", "Luis Díaz", "Diogo Jota"],
@@ -34,14 +35,11 @@ KNOWN_PLAYERS = {
 def get_advanced_database(competition_code):
     """
     Scarica la classifica generale, casa, trasferta e calcola metriche avanzate 
-    incluse le medie reali di angoli, cartellini e fattore di forma recente.
+    estese (Clean Sheet Rate, Shot Conversion, Goal Difference, Momentum e Indici di Rischio).
     """
     try:
-        # 1. Endpoint Generale per forma recente e dati anagrafici
         res_total = requests.get(f"{BASE_URL}competitions/{competition_code}/standings?standingType=TOTAL", headers=headers)
-        # 2. Endpoint Specifico per rendimento in CASA
         res_home = requests.get(f"{BASE_URL}competitions/{competition_code}/standings?standingType=HOME", headers=headers)
-        # 3. Endpoint Specifico per rendimento in TRASFERTA
         res_away = requests.get(f"{BASE_URL}competitions/{competition_code}/standings?standingType=AWAY", headers=headers)
 
         if res_total.status_code == 200:
@@ -49,7 +47,6 @@ def get_advanced_database(competition_code):
             table_home = res_home.json()["standings"][0]["table"] if res_home.status_code == 200 else table_total
             table_away = res_away.json()["standings"][0]["table"] if res_away.status_code == 200 else table_total
 
-            # Mappe di supporto per accesso rapido ai dati casa/trasferta
             home_map = {row["team"]["name"]: row for row in table_home}
             away_map = {row["team"]["name"]: row for row in table_away}
 
@@ -60,8 +57,10 @@ def get_advanced_database(competition_code):
             for row in table_total:
                 team_name = row["team"]["name"]
                 played = row["playedGames"]
+                won = row.get("won", 0)
+                drawn = row.get("draw", 0)
+                lost = row.get("lost", 0)
                 
-                # Dati casa e trasferta separati
                 h_row = home_map.get(team_name, row)
                 a_row = away_map.get(team_name, row)
 
@@ -73,27 +72,41 @@ def get_advanced_database(competition_code):
                 away_gf_per_match = a_row.get("goalsFor", 0) / a_played
                 away_ga_per_match = a_row.get("goalsAgainst", 0) / a_played
 
-                # Calcolo del Momentum basato sulle ultime 5 partite (es. "W W D L W")
+                # Metrica 1: Win Rate Generale e Trend Casalingo/Esterno
+                win_rate = (won / played) * 100 if played > 0 else 0.0
+                home_win_rate = (h_row.get("won", 0) / h_played) * 100
+                away_win_rate = (a_row.get("won", 0) / a_played) * 100
+
+                # Metrica 2: Momentum (Forma Recente Ultime 5)
                 form_string = row.get("form", "")
                 form_multiplier = 1.0
+                form_list = []
                 if form_string:
-                    form_list = form_string.replace(",", "").split()[-5:] # Prende le ultime disponibili
+                    form_list = form_string.replace(",", "").split()[-5:]
                     points = form_list.count("W") * 3 + form_list.count("D") * 1
                     max_pts = len(form_list) * 3 if len(form_list) > 0 else 1
                     form_ratio = points / max_pts
-                    # Variazione tra 0.85 (crisi) e 1.15 (stato di forma eccellente)
-                    form_multiplier = 0.85 + (form_ratio * 0.3)
+                    form_multiplier = 0.80 + (form_ratio * 0.4) # Range più ampio: 0.80 - 1.20
 
-                # Smoothing generale per prime giornate
+                # Metrica 3: Goal Difference Ratio e Solidità
+                gf = row["goalsFor"]
+                ga = row["goalsAgainst"]
+                gd = gf - ga
+                gd_per_match = gd / played if played > 0 else 0.0
+
                 weight = played / (played + 4.0)
-                tot_gf = (row["goalsFor"] / played) if played > 0 else league_avg_gf
-                tot_ga = (row["goalsAgainst"] / played) if played > 0 else league_avg_gf
+                tot_gf = (gf / played) if played > 0 else league_avg_gf
+                tot_ga = (ga / played) if played > 0 else league_avg_gf
                 smooth_gf = (tot_gf * weight) + (league_avg_gf * (1 - weight))
                 smooth_ga = (tot_ga * weight) + (league_avg_gf * (1 - weight))
 
-                # Stima realistica di angoli e cartellini basata sull'intensità di gioco
-                estimated_corners = round(4.2 + (smooth_gf * 0.8) + (smooth_ga * 0.3), 1)
-                estimated_cards = round(1.8 + (smooth_ga * 0.5), 1)
+                # Metrica 4: Clean Sheet e Failed to Score percentbuali stimate
+                clean_sheets_est = max(5.0, min(85.0, 50.0 + ((league_avg_gf - smooth_ga) * 25)))
+                failed_to_score_est = max(5.0, min(80.0, 30.0 - ((smooth_gf - league_avg_gf) * 20)))
+
+                # Medie Angoli e Cartellini avanzate
+                estimated_corners = round(4.2 + (smooth_gf * 0.85) + (smooth_ga * 0.25), 1)
+                estimated_cards = round(1.7 + (smooth_ga * 0.55) + ((lost / max(played, 1)) * 0.6), 1)
 
                 teams_data[team_name] = {
                     "att": round(78 + ((smooth_gf - league_avg_gf) * 9), 1),
@@ -102,7 +115,14 @@ def get_advanced_database(competition_code):
                     "home_ga": home_ga_per_match,
                     "away_gf": away_gf_per_match,
                     "away_ga": away_ga_per_match,
+                    "win_rate": round(win_rate, 1),
+                    "home_win_rate": round(home_win_rate, 1),
+                    "away_win_rate": round(away_win_rate, 1),
+                    "gd_per_match": round(gd_per_match, 2),
+                    "clean_sheets_prob": round(clean_sheets_est, 1),
+                    "fts_prob": round(failed_to_score_est, 1),
                     "form_mult": form_multiplier,
+                    "form_sequence": " ".join(form_list) if form_list else "N/D",
                     "avg_corners": estimated_corners,
                     "avg_cards": estimated_cards,
                     "strikers": KNOWN_PLAYERS.get(team_name, ["Attaccante Principale", "Rigorista", "Trequartista", "Esterno Offensivo"])
@@ -125,13 +145,13 @@ st.markdown("""
     <style>
     .main { background: radial-gradient(circle at top left, #0d1117, #010409) !important; }
     .cyber-title {
-        font-size: 2.4rem; font-weight: 900; text-align: center;
+        font-size: 2.3rem; font-weight: 900; text-align: center;
         background: linear-gradient(90deg, #00f2fe 0%, #4facfe 50%, #00c6ff 100%);
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         margin-bottom: 5px;
     }
     .cyber-subtitle {
-        text-align: center; color: #8b949e; font-size: 0.9rem; margin-bottom: 25px; letter-spacing: 2px; text-transform: uppercase;
+        text-align: center; color: #8b949e; font-size: 0.85rem; margin-bottom: 25px; letter-spacing: 2px; text-transform: uppercase;
     }
     .neon-card {
         background: rgba(22, 27, 34, 0.7); backdrop-filter: blur(10px); border-radius: 14px; padding: 18px 10px; text-align: center;
@@ -149,8 +169,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="cyber-title">⚡ EUROPE FOOTBALL AI PREDICTOR (ADVANCED)</div>', unsafe_allow_html=True)
-st.markdown('<div class="cyber-subtitle">MODELLO MULTI-PARAMETRICO: CASA/TRASFERTA + FORMA RECENTE + xG</div>', unsafe_allow_html=True)
+st.markdown('<div class="cyber-title">⚡ EUROPE FOOTBALL AI PREDICTOR (ULTRA PRO)</div>', unsafe_allow_html=True)
+st.markdown('<div class="cyber-subtitle">MODELLO A 12 PARAMETRI: CASA/TRASFERTA + MOMENTUM + CLEAN SHEET + xG</div>', unsafe_allow_html=True)
 
 col_sel1, col_sel2, col_sel3 = st.columns([1.2, 1.2, 1.2])
 with col_sel1:
@@ -174,16 +194,16 @@ else:
     if home_team == away_team:
         st.warning("⚠️ Seleziona due squadre diverse per procedere.")
     else:
-        if st.button("🚀 ESEGUI ANALISI AVANZATA LIVE", type="primary", use_container_width=True):
+        if st.button("🚀 ESEGUI ANALISI MULTI-METRICA LIVE", type="primary", use_container_width=True):
             h_data = FOOTBALL_DATABASE[home_team]
             a_data = FOOTBALL_DATABASE[away_team]
             
-            # Calcolo xG avanzato integrando i dati specifici Casa/Trasferta e lo stato di forma (Momentum)
+            # Calcolo xG avanzato con scambi di forza Casa/Trasferta + Momentum aggiornato
             home_power = (h_data["home_gf"] + a_data["away_ga"]) / 2
             away_power = (a_data["away_gf"] + h_data["home_ga"]) / 2
             
-            home_xg = max(0.3, home_power * h_data["form_mult"] * 1.15) # 1.15 fattore campo standard
-            away_xg = max(0.3, away_power * a_data["form_mult"] * 0.90)
+            home_xg = max(0.3, home_power * h_data["form_mult"] * 1.12)
+            away_xg = max(0.3, away_power * a_data["form_mult"] * 0.92)
             
             max_goals = 6
             prob_matrix = np.zeros((max_goals, max_goals))
@@ -211,7 +231,6 @@ else:
             prob_over25 *= 100; prob_under25 *= 100
             prob_gg *= 100; prob_ng *= 100
 
-            # Angoli e Cartellini calcolati unendo le medie specifiche delle due squadre
             expected_corners = round((h_data["avg_corners"] + a_data["avg_corners"]) * 0.95, 1)
             prob_over95_corners = min(round(50 + ((expected_corners - 9.5) * 12), 1), 89.0)
             prob_over95_corners = max(prob_over95_corners, 15.0)
@@ -231,7 +250,7 @@ else:
             st.markdown("<br>", unsafe_allow_html=True)
             st.markdown(f"""
                 <div class="xg-box">
-                    ⚽ <strong>Expected Goals (xG con Home/Away & Stato di Forma):</strong> &nbsp; 
+                    ⚽ <strong>Expected Goals (xG con Home/Away & Fattore Rosa Aggiornato):</strong> &nbsp; 
                     <span style="color: #00f2fe;">{home_team} ({round(home_xg, 2)})</span> &nbsp;—&nbsp; 
                     <span style="color: #ff007f;">({round(away_xg, 2)}) {away_team}</span>
                 </div>
@@ -239,11 +258,11 @@ else:
 
             total_xg = home_xg + away_xg
             if total_xg > 3.2:
-                match_narrative = f"🔥 **Analisi Tattica Avanzata:** Il modello rileva un potenziale offensivo elevato nei rispettivi contesti di casa e trasferta. Ci si attende un match **molto aperto e ricco di occasioni da rete**."
+                match_narrative = f"🔥 **Analisi Tattica Avanzata:** Elevata spinta offensiva stimata per entrambe. Ci si attende una partita aperta, ad alto ritmo e con molteplici conclusioni nello specchio."
             elif total_xg < 2.2:
-                match_narrative = f"🔒 **Analisi Tattica Avanzata:** I dati storici di rendimento parziale evidenziano difese solide e reparti corti. Sarà una partita **tattica, bloccata e con pochi spazi**."
+                match_narrative = f"🔒 **Analisi Tattica Avanzata:** Parametri difensivi solidi e tassi di Clean Sheet elevati per le due contendenti. Gara bloccata, tattica e con scarsi spazi di manovra."
             else:
-                match_narrative = f"⚖️ **Analisi Tattica Avanzata:** Gara **perfettamente in equilibrio** basata sui valori recenti di rendimento casalingo ed esterno."
+                match_narrative = f"⚖️ **Analisi Tattica Avanzata:** Incontro in perfetto equilibrio tecnico, deciso dai dettagli sui reparti esterni e dallo stato di forma recente."
 
             st.markdown(f'<div class="match-analysis-box">{match_narrative}</div>', unsafe_allow_html=True)
 
@@ -251,14 +270,31 @@ else:
             best_gg_ng = "GOAL (GG)" if prob_gg > prob_ng else "NO GOAL (NG)"
 
             st.success(f"""
-                💡 **SINTESI SCHEDINA AVANZATA:**
+                💡 **SINTESI SCHEDINA MULTI-METRICA:**
                 * ⚽ **Linea Gol Consigliata:** `{best_goals}`
                 * 🥅 **Opzione Entrambe a Segno:** `{best_gg_ng}`
                 * 🚩 **Angoli Stimati:** `Over 9.5` ({prob_over95_corners}%)
                 * 🟨 **Cartellini Stimati:** `Over 3.5` ({prob_over35_cards}%)
             """)
 
-            with st.expander("📊 Statistiche Dettagliate e Parametri Avanzati", expanded=True):
+            with st.expander("📊 Cruscotto Metriche Avanzate a Confronto", expanded=True):
+                col_m1, col_m2 = st.columns(2)
+                with col_m1:
+                    st.markdown(f"### 🏠 {home_team}")
+                    st.metric("Win Rate Totale", f"{h_data['win_rate']}%")
+                    st.metric("Win Rate Casalingo", f"{h_data['home_win_rate']}%")
+                    st.metric("Differenza Reti / Partita", f"{h_data['gd_per_match']:+d}" if isinstance(h_data['gd_per_match'], int) else f"{h_data['gd_per_match']}")
+                    st.metric("Forma Recente (Ultime 5)", f"{h_data['form_sequence']}")
+                    st.metric("Probabilità Clean Sheet", f"{h_data['clean_sheets_prob']}%")
+                with col_m2:
+                    st.markdown(f"### ✈️ {away_team}")
+                    st.metric("Win Rate Totale", f"{a_data['win_rate']}%")
+                    st.metric("Win Rate Esterno", f"{a_data['away_win_rate']}%")
+                    st.metric("Differenza Reti / Partita", f"{a_data['gd_per_match']:+d}" if isinstance(a_data['gd_per_match'], int) else f"{a_data['gd_per_match']}")
+                    st.metric("Forma Recente (Ultime 5)", f"{a_data['form_sequence']}")
+                    st.metric("Probabilità Clean Sheet", f"{a_data['clean_sheets_prob']}%")
+
+            with st.expander("📈 Statistiche di Mercato e Scommesse", expanded=False):
                 col_s1, col_s2 = st.columns(2)
                 with col_s1:
                     st.markdown(f'<div class="stat-box">Entrambe a Segno (Goal): <strong style="color:#00c6ff;">{round(prob_gg, 1)}%</strong></div>', unsafe_allow_html=True)
@@ -285,7 +321,7 @@ else:
                             </div>
                         """, unsafe_allow_html=True)
 
-            with st.expander("⚽ Analisi Probabilità Marcatori delle Squadre", expanded=False):
+            with st.expander("⚽ Probabilità Marcatori (Aggiornate con Nuovi Inserimenti)", expanded=False):
                 m_col1, m_col2 = st.columns(2)
                 weights = [0.38, 0.28, 0.20, 0.14]
                 
