@@ -262,10 +262,9 @@ else:
             expected_corners = round((h_data["avg_corners"] + a_data["avg_corners"]) * 0.95, 1)
             expected_cards = round((h_data["avg_cards"] + a_data["avg_cards"]) * 0.9, 1)
 
-            # --- MOTORE DI SCELTA SMART COMBO (AGGIORNATO CON GESTIONE PARTITE DIFFICILI) ---
+            # --- MOTORE DI SCELTA SMART COMBO (CON 1X SU PARTITE DIFFICILI) ---
             combos = []
             
-            # Se la partita è equilibrata/difficile (nessuna delle due ha > 45% di vittoria secca)
             if abs(home_win - away_win) < 15.0 or (home_win < 45 and away_win < 40):
                 combos.append(("1X + Under 3.5", h_or_draw * (prob_under35/100), 1.45))
                 combos.append(("1X + Over 1.5", h_or_draw * (prob_over15/100), 1.50))
@@ -273,7 +272,6 @@ else:
                 if prob_gg > 50:
                     combos.append(("1X + Goal", h_or_draw * (prob_gg/100), 1.85))
             else:
-                # Partita più sbilanciata
                 if home_win > 45:
                     combos.append(("1 + Over 1.5", home_win * (prob_over15/100), 1.65))
                     combos.append(("1X + Under 3.5", h_or_draw * (prob_under35/100), 1.45))
@@ -320,6 +318,26 @@ else:
                     </div>
                 </div>
             """, unsafe_allow_html=True)
+
+            # --- SEZIONE RISULTATI ESATTI PIÙ PROBABILI ---
+            with st.expander("🎯 I 4 Risultati Esatti più Probabili"):
+                score_list = []
+                for h in range(max_goals):
+                    for a in range(max_goals):
+                        score_list.append((f"{h} - {a}", prob_matrix[h, a] * 100))
+                
+                score_list.sort(key=lambda x: x[1], reverse=True)
+                top_scores = score_list[:4]
+                
+                sc_cols = st.columns(4)
+                for idx, (sc_val, sc_prob) in enumerate(top_scores):
+                    with sc_cols[idx]:
+                        st.markdown(f"""
+                            <div style="background: rgba(17, 24, 39, 0.7); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 12px; text-align: center;">
+                                <div style="font-size: 1.2rem; font-weight: bold; color: #38bdf8;">{sc_val}</div>
+                                <div style="font-size: 0.85rem; color: #34d399; margin-top: 4px;">{round(sc_prob, 1)}%</div>
+                            </div>
+                        """, unsafe_allow_html=True)
 
             # --- BOX 2: Metriche di Squadra e Forma ---
             st.markdown(f"""
