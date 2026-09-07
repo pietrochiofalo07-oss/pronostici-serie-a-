@@ -28,6 +28,10 @@ KNOWN_PLAYERS = {
     "Arsenal FC": ["Bukayo Saka", "Kai Havertz", "Gabriel Martinelli", "Leandro Trossard"],
     "Liverpool FC": ["Mohamed Salah", "Darwin Núñez", "Luis Díaz", "Diogo Jota"],
     "Chelsea FC": ["Cole Palmer", "Nicolas Jackson", "Christopher Nkunku", "Pedro Neto"],
+    "Real Madrid CF": ["Kylian Mbappé", "Vinicius Jr", "Jude Bellingham", "Rodrygo"],
+    "FC Barcelona": ["Robert Lewandowski", "Lamine Yamal", "Raphinha", "Dani Olmo"],
+    "FC Bayern München": ["Harry Kane", "Jamal Musiala", "Michael Olise", "Serge Gnabry"],
+    "Paris Saint-Germain FC": ["Ousmane Dembélé", "Bradley Barcola", "Marco Asensio", "Lee Kang-in"],
 }
 
 @st.cache_data(ttl=3600)
@@ -38,20 +42,42 @@ def get_advanced_database(competition_code):
         res_away = requests.get(f"{BASE_URL}competitions/{competition_code}/standings?standingType=AWAY", headers=headers)
 
         if res_total.status_code == 200:
-            table_total = res_total.json()["standings"][0]["table"]
-            table_home = res_home.json()["standings"][0]["table"] if res_home.status_code == 200 else table_total
-            table_away = res_away.json()["standings"][0]["table"] if res_away.status_code == 200 else table_total
+            standings_data = res_total.json().get("standings", [])
+            # Gestione per campionati a gironi (es. Champions League) o classifica unica
+            table_total = []
+            for st_group in standings_data:
+                if st_group.get("type") == "TOTAL":
+                    table_total = st_group.get("table", [])
+                    break
+            if not table_total and standings_data:
+                table_total = standings_data[0].get("table", [])
+
+            table_home = table_total
+            table_away = table_total
+            if res_home.status_code == 200:
+                s_home = res_home.json().get("standings", [])
+                for st_group in s_home:
+                    if st_group.get("type") == "HOME":
+                        table_home = st_group.get("table", [])
+                        break
+            if res_away.status_code == 200:
+                s_away = res_away.json().get("standings", [])
+                for st_group in s_away:
+                    if st_group.get("type") == "AWAY":
+                        table_away = st_group.get("table", [])
+                        break
 
             home_map = {row["team"]["name"]: row for row in table_home}
             away_map = {row["team"]["name"]: row for row in table_away}
 
             teams_data = {}
-            total_games = sum(row["playedGames"] for row in table_total)
-            league_avg_gf = (sum(row["goalsFor"] for row in table_total) / total_games) if total_games > 0 else 1.35
+            total_games = sum(row.get("playedGames", 0) for row in table_total)
+            total_gf = sum(row.get("goalsFor", 0) for row in table_total)
+            league_avg_gf = (total_gf / total_games) if total_games > 0 else 1.35
 
             for row in table_total:
                 team_name = row["team"]["name"]
-                played = row["playedGames"]
+                played = row.get("playedGames", 0)
                 won = row.get("won", 0)
                 lost = row.get("lost", 0)
                 
@@ -80,8 +106,8 @@ def get_advanced_database(competition_code):
                     form_ratio = points / max_pts
                     form_multiplier = 0.80 + (form_ratio * 0.4)
 
-                gf = row["goalsFor"]
-                ga = row["goalsAgainst"]
+                gf = row.get("goalsFor", 0)
+                ga = row.get("goalsAgainst", 0)
                 gd = gf - ga
                 gd_per_match = gd / played if played > 0 else 0.0
 
@@ -122,7 +148,9 @@ leagues_map = {
     "Premier League": "PL",
     "La Liga": "PD",
     "Bundesliga": "BL1",
-    "Ligue 1": "FL1"
+    "Ligue 1": "FL1",
+    "Champions League": "CL",
+    "Europa League": "EL"
 }
 
 # --- CUSTOM CSS ---
@@ -189,13 +217,13 @@ st.markdown('<div class="sub-title">Modello Matematico Avanzato & Smart Combo Fi
 
 col_sel1, col_sel2, col_sel3 = st.columns(3)
 with col_sel1:
-    league_name = st.selectbox("Campionato", list(leagues_map.keys()))
+    league_name = st.selectbox("Campionato / Coppa", list(leagues_map.keys()))
     competition_code = leagues_map[league_name]
 
 FOOTBALL_DATABASE = get_advanced_database(competition_code)
 
 if not FOOTBALL_DATABASE:
-    st.error("⚠️ Impossibile scaricare i dati.")
+    st.error("⚠️ Impossibile scaricare i dati per questa competizione (potrebbe essere tra una fase e l'altra o richiedere un piano API differente).")
 else:
     teams_list = sorted(list(FOOTBALL_DATABASE.keys()))
 
