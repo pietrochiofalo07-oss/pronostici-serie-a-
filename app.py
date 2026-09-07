@@ -192,7 +192,7 @@ st.markdown('<div class="main-title">⚡ EUROPE AI PREDICTOR PRO</div>', unsafe_
 st.markdown('<div class="sub-title">Modello Matematico Avanzato & Smart Combo Finder</div>', unsafe_allow_html=True)
 
 # --- SELETTORE MODALITÀ (SEZIONE DIVISA) ---
-app_mode = st.radio("Seleziona Sezione", ["🔍 Analisi Singolo Match", "📝 Schedina Multipla (Incolla Partite)"], horizontal=True)
+app_mode = st.radio("Seleziona Sezione", ["🔍 Analisi Singolo Match", "📝 Schedina Multipla (Seleziona Squadre)"], horizontal=True)
 
 col_sel1, col_sel2, col_sel3 = st.columns(3)
 with col_sel1:
@@ -388,55 +388,80 @@ else:
                             st.progress(p_score / 100)
 
     else:
-        # --- SEZIONE SEPARATA: SCHEDINA MULTIPLA INCOLLANDO LE PARTITE ---
+        # --- SEZIONE SEPARATA: SCHEDINA MULTIPLA TRAMITE SELEZIONE SQUADRE ---
         st.markdown("---")
-        st.markdown("### 📝 Incolla la tua lista di partite in blocco")
-        st.markdown("Scrivi una partita per riga nel formato **Squadra Casa - Squadra Ospite** (es. *AC Milan - Inter Milano*).")
-        
-        default_text = "\n".join([f"{teams_list[i]} - {teams_list[i+1]}" for i in range(0, min(4, len(teams_list)-1), 2)])
-        matches_input = st.text_area("Elenco Partite:", value=default_text, height=150)
+        st.markdown("### 📝 Componi la Schedina Multipla")
+        st.markdown("Seleziona le squadre dai menù a tendina e aggiungile alla lista della tua schedina.")
 
-        if st.button("🎲 Genera Schedina Multipla", type="primary", use_container_width=True):
-            lines = [line.strip() for line in matches_input.split("\n") if "-" in line]
+        # Inizializza la lista delle partite salvate nella sessione se non esiste
+        if "multi_matches" not in st.session_state:
+            st.session_state.multi_matches = []
+
+        m_col_home, m_col_away = st.columns(2)
+        with m_col_home:
+            multi_home = st.selectbox("Squadra in Casa", teams_list, key="m_home")
+        with m_col_away:
+            multi_away = st.selectbox("Squadra Ospite", teams_list, index=1 if len(teams_list) > 1 else 0, key="m_away")
+
+        col_add, col_clear = st.columns([3, 1])
+        with col_add:
+            if st.button("➕ Aggiungi Partita alla Schedina", use_container_width=True):
+                if multi_home == multi_away:
+                    st.error("⚠️ La squadra di casa e quella ospite non possono essere uguali.")
+                else:
+                    match_tuple = (multi_home, multi_away)
+                    if match_tuple not in st.session_state.multi_matches:
+                        st.session_state.multi_matches.append(match_tuple)
+                        st.success(f"Aggiunta: {multi_home} vs {multi_away}")
+                    else:
+                        st.warning("⚠️ Questa partita è già presente nella lista.")
+        with col_clear:
+            if st.button("🗑️ Svuota Lista", use_container_width=True):
+                st.session_state.multi_matches = []
+                st.rerun()
+
+        # Mostra le partite attualmente inserite
+        if st.session_state.multi_matches:
+            st.markdown("---")
+            st.markdown(f"### 📋 Partite Selezionate ({len(st.session_state.multi_matches)})")
             
-            if not lines:
-                st.error("⚠️ Inserisci almeno una partita valida nel formato Casa - Ospite.")
-            else:
+            for idx, (h_team, a_team) in enumerate(st.session_state.multi_matches, 1):
+                col_txt, col_del = st.columns([5, 1])
+                with col_txt:
+                    st.markdown(f"**{idx}.** {h_team} vs {a_team}")
+                with col_del:
+                    if st.button("❌ Rimuovi", key=f"del_{idx}"):
+                        st.session_state.multi_matches.pop(idx - 1)
+                        st.rerun()
+
+            if st.button("🎲 Calcola Schedina Multipla Completa", type="primary", use_container_width=True):
                 st.markdown("---")
-                st.markdown("### 🔥 La tua Schedina Multipla Calcolata dall'AI")
+                st.markdown("### 🔥 Risultati & Pronostici Schedina Multipla")
                 
                 total_combo_odd_estim = 1.0
                 
-                for idx, line in enumerate(lines, 1):
-                    parts = line.split("-")
-                    h_candidate = parts[0].strip()
-                    a_candidate = parts[1].strip()
+                for idx, (h_team, a_team) in enumerate(st.session_state.multi_matches, 1):
+                    h_data = FOOTBALL_DATABASE[h_team]
+                    a_data = FOOTBALL_DATABASE[a_team]
                     
-                    matched_h = next((t for t in teams_list if h_candidate.lower() in t.lower()), None)
-                    matched_a = next((t for t in teams_list if a_candidate.lower() in t.lower()), None)
+                    h_xg = max(0.3, ((h_data["home_gf"] + a_data["away_ga"]) / 2) * h_data["form_mult"] * 1.12)
+                    a_xg = max(0.3, ((a_data["away_gf"] + h_data["home_ga"]) / 2) * a_data["form_mult"] * 0.92)
                     
-                    if matched_h and matched_a:
-                        h_data = FOOTBALL_DATABASE[matched_h]
-                        a_data = FOOTBALL_DATABASE[matched_a]
-                        
-                        h_xg = max(0.3, ((h_data["home_gf"] + a_data["away_ga"]) / 2) * h_data["form_mult"] * 1.12)
-                        a_xg = max(0.3, ((a_data["away_gf"] + h_data["home_ga"]) / 2) * a_data["form_mult"] * 0.92)
-                        
-                        pick = "1X + Over 1.5" if h_xg >= a_xg else "X2 + Over 1.5"
-                        est_odd = 1.45
-                        total_combo_odd_estim *= est_odd
-                        
-                        st.markdown(f"""
-                            <div class="card-box" style="padding: 12px; margin-bottom: 8px;">
-                                <b>{idx}. {matched_h} vs {matched_a}</b><br>
-                                <span style="color: #34d399;">Consiglio AI: <b>{pick}</b></span> &nbsp;|&nbsp; <span style="color: #38bdf8;">Quota stimata: ~{est_odd}</span>
-                            </div>
-                        """, unsafe_allow_html=True)
-                    else:
-                        st.warning(f"⚠️ Riga {idx} ('{h_candidate} vs {a_candidate}'): Squadre non trovate nel database del campionato selezionato.")
+                    pick = "1X + Over 1.5" if h_xg >= a_xg else "X2 + Over 1.5"
+                    est_odd = 1.45
+                    total_combo_odd_estim *= est_odd
+                    
+                    st.markdown(f"""
+                        <div class="card-box" style="padding: 12px; margin-bottom: 8px;">
+                            <b>{idx}. {h_team} vs {a_team}</b><br>
+                            <span style="color: #34d399;">Consiglio AI: <b>{pick}</b></span> &nbsp;|&nbsp; <span style="color: #38bdf8;">Quota stimata: ~{est_odd}</span>
+                        </div>
+                    """, unsafe_allow_html=True)
                 
                 st.markdown(f"""
                     <div class="combo-box" style="text-align: center; margin-top: 20px;">
                         <div style="font-size: 1.1rem; font-weight: bold;">📊 Quota Totale Stimata Schedina: ~{round(total_combo_odd_estim, 2)}</div>
                     </div>
                 """, unsafe_allow_html=True)
+        else:
+            st.info("💡 Aggiungi almeno una partita usando i menù sopra per generare la schedina multipla.")
