@@ -38,110 +38,88 @@ KNOWN_PLAYERS = {
 def get_advanced_database(competition_code):
     try:
         res_total = requests.get(f"{BASE_URL}competitions/{competition_code}/standings?standingType=TOTAL", headers=headers)
-        res_home = requests.get(f"{BASE_URL}competitions/{competition_code}/standings?standingType=HOME", headers=headers)
-        res_away = requests.get(f"{BASE_URL}competitions/{competition_code}/standings?standingType=AWAY", headers=headers)
+        
+        if res_total.status_code != 200:
+            return {}
 
-        if res_total.status_code == 200:
-            standings_data = res_total.json().get("standings", [])
-            # Gestione per campionati a gironi (es. Champions League) o classifica unica
-            table_total = []
-            for st_group in standings_data:
-                if st_group.get("type") == "TOTAL":
-                    table_total = st_group.get("table", [])
-                    break
-            if not table_total and standings_data:
-                table_total = standings_data[0].get("table", [])
-
-            table_home = table_total
-            table_away = table_total
-            if res_home.status_code == 200:
-                s_home = res_home.json().get("standings", [])
-                for st_group in s_home:
-                    if st_group.get("type") == "HOME":
-                        table_home = st_group.get("table", [])
-                        break
-            if res_away.status_code == 200:
-                s_away = res_away.json().get("standings", [])
-                for st_group in s_away:
-                    if st_group.get("type") == "AWAY":
-                        table_away = st_group.get("table", [])
-                        break
-
-            home_map = {row["team"]["name"]: row for row in table_home}
-            away_map = {row["team"]["name"]: row for row in table_away}
-
-            teams_data = {}
-            total_games = sum(row.get("playedGames", 0) for row in table_total)
-            total_gf = sum(row.get("goalsFor", 0) for row in table_total)
-            league_avg_gf = (total_gf / total_games) if total_games > 0 else 1.35
-
-            for row in table_total:
-                team_name = row["team"]["name"]
-                played = row.get("playedGames", 0)
-                won = row.get("won", 0)
-                lost = row.get("lost", 0)
+        data = res_total.json()
+        standings_data = data.get("standings", [])
+        
+        table_total = []
+        for st_group in standings_data:
+            # Nelle coppe europee o campionati a gironi cerchiamo la tabella totale disponibile
+            t = st_group.get("table", [])
+            if t:
+                table_total.extend(t)
                 
-                h_row = home_map.get(team_name, row)
-                a_row = away_map.get(team_name, row)
+        # Se non ha trovato nulla nei gruppi, prova a prendere il primo blocco disponibile
+        if not table_total and standings_data:
+            table_total = standings_data[0].get("table", [])
 
-                h_played = h_row.get("playedGames", 1) or 1
-                a_played = a_row.get("playedGames", 1) or 1
+        if not table_total:
+            return {}
 
-                home_gf_per_match = h_row.get("goalsFor", 0) / h_played
-                home_ga_per_match = h_row.get("goalsAgainst", 0) / h_played
-                away_gf_per_match = a_row.get("goalsFor", 0) / a_played
-                away_ga_per_match = a_row.get("goalsAgainst", 0) / a_played
+        teams_data = {}
+        total_games = sum(row.get("playedGames", 0) for row in table_total)
+        total_gf = sum(row.get("goalsFor", 0) for row in table_total)
+        league_avg_gf = (total_gf / total_games) if total_games > 0 else 1.35
 
-                win_rate = (won / played) * 100 if played > 0 else 0.0
-                home_win_rate = (h_row.get("won", 0) / h_played) * 100
-                away_win_rate = (a_row.get("won", 0) / a_played) * 100
+        for row in table_total:
+            team_info = row.get("team", {})
+            team_name = team_info.get("name", "Sconosciuta")
+            played = row.get("playedGames", 0)
+            won = row.get("won", 0)
+            lost = row.get("lost", 0)
+            
+            played_safe = max(played, 1)
+            
+            gf = row.get("goalsFor", 0)
+            ga = row.get("goalsAgainst", 0)
+            gd = gf - ga
+            
+            gf_per_match = gf / played_safe
+            ga_per_match = ga / played_safe
 
-                form_string = row.get("form", "")
-                form_multiplier = 1.0
-                form_list = []
-                if form_string:
-                    form_list = form_string.replace(",", "").split()[-5:]
+            win_rate = (won / played_safe) * 100
+
+            form_string = row.get("form", "")
+            form_multiplier = 1.0
+            form_list = []
+            if form_string:
+                form_list = [x for x in form_string.replace(",", "").split() if x in ['W', 'D', 'L']][-5:]
+                if form_list:
                     points = form_list.count("W") * 3 + form_list.count("D") * 1
-                    max_pts = len(form_list) * 3 if len(form_list) > 0 else 1
-                    form_ratio = points / max_pts
+                    max_pts = len(form_list) * 3
+                    form_ratio = points / max_pts if max_pts > 0 else 0.5
                     form_multiplier = 0.80 + (form_ratio * 0.4)
 
-                gf = row.get("goalsFor", 0)
-                ga = row.get("goalsAgainst", 0)
-                gd = gf - ga
-                gd_per_match = gd / played if played > 0 else 0.0
+            weight = played / (played + 4.0) if played > 0 else 0.5
+            smooth_gf = (gf_per_match * weight) + (league_avg_gf * (1 - weight))
+            smooth_ga = (ga_per_match * weight) + (league_avg_gf * (1 - weight))
 
-                weight = played / (played + 4.0)
-                tot_gf = (gf / played) if played > 0 else league_avg_gf
-                tot_ga = (ga / played) if played > 0 else league_avg_gf
-                smooth_gf = (tot_gf * weight) + (league_avg_gf * (1 - weight))
-                smooth_ga = (tot_ga * weight) + (league_avg_gf * (1 - weight))
+            clean_sheets_est = max(5.0, min(85.0, 50.0 + ((league_avg_gf - smooth_ga) * 25)))
+            estimated_corners = round(4.2 + (smooth_gf * 0.85) + (smooth_ga * 0.25), 1)
+            estimated_cards = round(1.7 + (smooth_ga * 0.55) + ((lost / played_safe) * 0.6), 1)
 
-                clean_sheets_est = max(5.0, min(85.0, 50.0 + ((league_avg_gf - smooth_ga) * 25)))
-
-                estimated_corners = round(4.2 + (smooth_gf * 0.85) + (smooth_ga * 0.25), 1)
-                estimated_cards = round(1.7 + (smooth_ga * 0.55) + ((lost / max(played, 1)) * 0.6), 1)
-
-                teams_data[team_name] = {
-                    "home_gf": home_gf_per_match,
-                    "home_ga": home_ga_per_match,
-                    "away_gf": away_gf_per_match,
-                    "away_ga": away_ga_per_match,
-                    "win_rate": round(win_rate, 1),
-                    "home_win_rate": round(home_win_rate, 1),
-                    "away_win_rate": round(away_win_rate, 1),
-                    "gd_per_match": round(gd_per_match, 2),
-                    "clean_sheets_prob": round(clean_sheets_est, 1),
-                    "form_mult": form_multiplier,
-                    "form_sequence": " ".join(form_list) if form_list else "N/D",
-                    "avg_corners": estimated_corners,
-                    "avg_cards": estimated_cards,
-                    "strikers": KNOWN_PLAYERS.get(team_name, ["Attaccante Principale", "Rigorista", "Trequartista", "Esterno Offensivo"])
-                }
-            return teams_data
-    except Exception:
-        pass
-    return {}
+            teams_data[team_name] = {
+                "home_gf": gf_per_match * 1.05,
+                "home_ga": ga_per_match * 0.95,
+                "away_gf": gf_per_match * 0.95,
+                "away_ga": ga_per_match * 1.05,
+                "win_rate": round(win_rate, 1),
+                "home_win_rate": round(win_rate, 1),
+                "away_win_rate": round(win_rate, 1),
+                "gd_per_match": round(gd / played_safe, 2),
+                "clean_sheets_prob": round(clean_sheets_est, 1),
+                "form_mult": form_multiplier,
+                "form_sequence": " ".join(form_list) if form_list else "N/D",
+                "avg_corners": estimated_corners,
+                "avg_cards": estimated_cards,
+                "strikers": KNOWN_PLAYERS.get(team_name, ["Attaccante 1", "Rigorista", "Trequartista", "Esterno"])
+            }
+        return teams_data
+    except Exception as e:
+        return {}
 
 leagues_map = {
     "Serie A": "SA",
@@ -223,7 +201,7 @@ with col_sel1:
 FOOTBALL_DATABASE = get_advanced_database(competition_code)
 
 if not FOOTBALL_DATABASE:
-    st.error("⚠️ Impossibile scaricare i dati per questa competizione (potrebbe essere tra una fase e l'altra o richiedere un piano API differente).")
+    st.warning("⚠️ Impossibile caricare i dati per questa competizione (potrebbe essere tra una fase e l'altra o non disporre di classifica attiva al momento). Prova un campionato nazionale o verifica la connessione.")
 else:
     teams_list = sorted(list(FOOTBALL_DATABASE.keys()))
 
@@ -256,13 +234,13 @@ else:
                     p = poisson.pmf(h, home_xg) * poisson.pmf(a, away_xg)
                     
                     if h == 0 and a == 0:
-                        p *= (1 - home_xg * away_xg * rho)
+                        p *= max(0.0, (1 - home_xg * away_xg * rho))
                     elif h == 0 and a == 1:
-                        p *= (1 + home_xg * rho)
+                        p *= max(0.0, (1 + home_xg * rho))
                     elif h == 1 and a == 0:
-                        p *= (1 + away_xg * rho)
+                        p *= max(0.0, (1 + away_xg * rho))
                     elif h == 1 and a == 1:
-                        p *= (1 - rho)
+                        p *= max(0.0, (1 - rho))
                         
                     p = max(0.0, p)
                     prob_matrix[h, a] = p
@@ -290,7 +268,7 @@ else:
             expected_corners = round((h_data["avg_corners"] + a_data["avg_corners"]) * 0.95, 1)
             expected_cards = round((h_data["avg_cards"] + a_data["avg_cards"]) * 0.9, 1)
 
-            # --- MOTORE DI SCELTA SMART COMBO (CON 1X SU PARTITE DIFFICILI) ---
+            # --- MOTORE DI SCELTA SMART COMBO ---
             combos = []
             
             if abs(home_win - away_win) < 15.0 or (home_win < 45 and away_win < 40):
@@ -322,7 +300,7 @@ else:
                     <div style="font-size: 1.2rem; font-weight: 800; color: #34d399; margin-bottom: 5px;">🔥 LA COMBO CONSIGLIATA DALL'AI</div>
                     <div style="font-size: 1.4rem; font-weight: bold; color: #ffffff; margin-bottom: 10px;">{best_combo[0]} <span style="font-size: 1rem; color: #38bdf8; float: right;">Quota stimata: ~{best_combo[2]}</span></div>
                     <div style="font-size: 0.9rem; color: #d1d5db;">
-                        Probabilità di successo stimata dal modello: <b>{round(best_combo[1], 1)}%</b>. (Gestione automatica 1X/X2 attivata per match ad alto equilibrio o difficoltà).
+                        Probabilità di successo stimata dal modello: <b>{round(best_combo[1], 1)}%</b>.
                     </div>
                 </div>
             """, unsafe_allow_html=True)
@@ -347,7 +325,7 @@ else:
                 </div>
             """, unsafe_allow_html=True)
 
-            # --- SEZIONE RISULTATI ESATTI PIÙ PROBABILI ---
+            # --- SEZIONE RISULTATI ESATTI ---
             with st.expander("🎯 I 4 Risultati Esatti più Probabili"):
                 score_list = []
                 for h in range(max_goals):
@@ -374,15 +352,13 @@ else:
                     <div style="display: flex; justify-content: space-between; gap: 20px;">
                         <div style="flex: 1;">
                             <div style="font-weight: 600; color: #38bdf8; margin-bottom: 8px;">🏠 {home_team}</div>
-                            <div class="metric-item">• Win Rate Totale: <b>{h_data['win_rate']}%</b></div>
-                            <div class="metric-item">• Win Rate Casa: <b>{h_data['home_win_rate']}%</b></div>
+                            <div class="metric-item">• Win Rate: <b>{h_data['win_rate']}%</b></div>
                             <div class="metric-item">• Clean Sheet: <b>{h_data['clean_sheets_prob']}%</b></div>
                             <div class="metric-item">• Forma: <span style="font-family: monospace; color: #34d399;">{h_data['form_sequence']}</span></div>
                         </div>
                         <div style="flex: 1;">
                             <div style="font-weight: 600; color: #818cf8; margin-bottom: 8px;">✈️ {away_team}</div>
-                            <div class="metric-item">• Win Rate Totale: <b>{a_data['win_rate']}%</b></div>
-                            <div class="metric-item">• Win Rate Trasferta: <b>{a_data['away_win_rate']}%</b></div>
+                            <div class="metric-item">• Win Rate: <b>{a_data['win_rate']}%</b></div>
                             <div class="metric-item">• Clean Sheet: <b>{a_data['clean_sheets_prob']}%</b></div>
                             <div class="metric-item">• Forma: <span style="font-family: monospace; color: #34d399;">{a_data['form_sequence']}</span></div>
                         </div>
@@ -390,7 +366,7 @@ else:
                 </div>
             """, unsafe_allow_html=True)
 
-            # --- SEZIONE EXTRA: Probabilità Marcatori con Barre ---
+            # --- SEZIONE MARCATORI ---
             with st.expander("⚽ Probabilità Goal Marcatori Chiave"):
                 m_col1, m_col2 = st.columns(2)
                 weights = [0.38, 0.28, 0.20, 0.14]
