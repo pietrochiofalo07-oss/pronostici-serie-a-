@@ -47,10 +47,12 @@ def get_advanced_database(competition_code):
         
         table_total = []
         for st_group in standings_data:
+            # Nelle coppe europee o campionati a gironi cerchiamo la tabella totale disponibile
             t = st_group.get("table", [])
             if t:
                 table_total.extend(t)
                 
+        # Se non ha trovato nulla nei gruppi, prova a prendere il primo blocco disponibile
         if not table_total and standings_data:
             table_total = standings_data[0].get("table", [])
 
@@ -116,7 +118,7 @@ def get_advanced_database(competition_code):
                 "strikers": KNOWN_PLAYERS.get(team_name, ["Attaccante 1", "Rigorista", "Trequartista", "Esterno"])
             }
         return teams_data
-    except Exception:
+    except Exception as e:
         return {}
 
 leagues_map = {
@@ -191,177 +193,194 @@ st.markdown("""
 st.markdown('<div class="main-title">⚡ EUROPE AI PREDICTOR PRO</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">Modello Matematico Avanzato & Smart Combo Finder</div>', unsafe_allow_html=True)
 
-# --- NAVIGAZIONE A TAB ---
-tab_single, tab_multi = st.tabs(["🔍 Analisi Singola Partita", "🎟️ Schedina Multipla Automatica"])
+col_sel1, col_sel2, col_sel3 = st.columns(3)
+with col_sel1:
+    league_name = st.selectbox("Campionato / Coppa", list(leagues_map.keys()))
+    competition_code = leagues_map[league_name]
 
-with tab_single:
-    col_sel1, col_sel2, col_sel3 = st.columns(3)
-    with col_sel1:
-        league_name = st.selectbox("Campionato / Coppa", list(leagues_map.keys()), key="single_league")
-        competition_code = leagues_map[league_name]
+FOOTBALL_DATABASE = get_advanced_database(competition_code)
 
-    FOOTBALL_DATABASE = get_advanced_database(competition_code)
+if not FOOTBALL_DATABASE:
+    st.warning("⚠️ Impossibile caricare i dati per questa competizione (potrebbe essere tra una fase e l'altra o non disporre di classifica attiva al momento). Prova un campionato nazionale o verifica la connessione.")
+else:
+    teams_list = sorted(list(FOOTBALL_DATABASE.keys()))
 
-    if not FOOTBALL_DATABASE:
-        st.warning("⚠️ Impossibile caricare i dati per questa competizione.")
+    with col_sel2:
+        home_team = st.selectbox("Casa", teams_list, index=0)
+    with col_sel3:
+        away_team = st.selectbox("Ospite", teams_list, index=1 if len(teams_list) > 1 else 0)
+
+    if home_team == away_team:
+        st.warning("⚠️ Seleziona due squadre diverse.")
     else:
-        teams_list = sorted(list(FOOTBALL_DATABASE.keys()))
+        if st.button("🚀 ESEGUI ANALISI & COMBO", type="primary", use_container_width=True):
+            h_data = FOOTBALL_DATABASE[home_team]
+            a_data = FOOTBALL_DATABASE[away_team]
+            
+            home_power = (h_data["home_gf"] + a_data["away_ga"]) / 2
+            away_power = (a_data["away_gf"] + h_data["home_ga"]) / 2
+            
+            home_xg = max(0.3, home_power * h_data["form_mult"] * 1.12)
+            away_xg = max(0.3, away_power * a_data["form_mult"] * 0.92)
+            
+            max_goals = 6
+            prob_matrix = np.zeros((max_goals, max_goals))
+            prob_over15 = prob_over25 = prob_under35 = prob_gg = 0.0
 
-        with col_sel2:
-            home_team = st.selectbox("Casa", teams_list, index=0, key="single_home")
-        with col_sel3:
-            away_team = st.selectbox("Ospite", teams_list, index=1 if len(teams_list) > 1 else 0, key="single_away")
+            rho = -0.10 
 
-        if home_team == away_team:
-            st.warning("⚠️ Seleziona due squadre diverse.")
-        else:
-            if st.button("🚀 ESEGUI ANALISI & COMBO", type="primary", use_container_width=True):
-                h_data = FOOTBALL_DATABASE[home_team]
-                a_data = FOOTBALL_DATABASE[away_team]
-                
-                home_power = (h_data["home_gf"] + a_data["away_ga"]) / 2
-                away_power = (a_data["away_gf"] + h_data["home_ga"]) / 2
-                
-                home_xg = max(0.3, home_power * h_data["form_mult"] * 1.12)
-                away_xg = max(0.3, away_power * a_data["form_mult"] * 0.92)
-                
-                max_goals = 6
-                prob_matrix = np.zeros((max_goals, max_goals))
-                prob_over15 = prob_over25 = prob_under35 = prob_gg = 0.0
+            for h in range(max_goals):
+                for a in range(max_goals):
+                    p = poisson.pmf(h, home_xg) * poisson.pmf(a, away_xg)
+                    
+                    if h == 0 and a == 0:
+                        p *= max(0.0, (1 - home_xg * away_xg * rho))
+                    elif h == 0 and a == 1:
+                        p *= max(0.0, (1 + home_xg * rho))
+                    elif h == 1 and a == 0:
+                        p *= max(0.0, (1 + away_xg * rho))
+                    elif h == 1 and a == 1:
+                        p *= max(0.0, (1 - rho))
+                        
+                    p = max(0.0, p)
+                    prob_matrix[h, a] = p
+                    
+                    if (h + a) > 1.5: prob_over15 += p
+                    if (h + a) > 2.5: prob_over25 += p
+                    if (h + a) < 3.5: prob_under35 += p
+                    if h > 0 and a > 0: prob_gg += p
 
-                rho = -0.10 
+            total_sum = np.sum(prob_matrix)
+            if total_sum > 0:
+                prob_matrix /= total_sum
 
+            home_win = float(np.sum(np.tril(prob_matrix, -1))) * 100
+            draw = float(np.sum(np.diag(prob_matrix))) * 100
+            away_win = float(np.sum(np.triu(prob_matrix, 1))) * 100
+            h_or_draw = home_win + draw
+            a_or_draw = away_win + draw
+
+            prob_over15 *= 100
+            prob_over25 *= 100
+            prob_under35 *= 100
+            prob_gg *= 100
+
+            expected_corners = round((h_data["avg_corners"] + a_data["avg_corners"]) * 0.95, 1)
+            expected_cards = round((h_data["avg_cards"] + a_data["avg_cards"]) * 0.9, 1)
+
+            # --- MOTORE DI SCELTA SMART COMBO ---
+            combos = []
+            
+            if abs(home_win - away_win) < 15.0 or (home_win < 45 and away_win < 40):
+                combos.append(("1X + Under 3.5", h_or_draw * (prob_under35/100), 1.45))
+                combos.append(("1X + Over 1.5", h_or_draw * (prob_over15/100), 1.50))
+                combos.append(("X2 + Over 1.5", a_or_draw * (prob_over15/100), 1.60))
+                if prob_gg > 50:
+                    combos.append(("1X + Goal", h_or_draw * (prob_gg/100), 1.85))
+            else:
+                if home_win > 45:
+                    combos.append(("1 + Over 1.5", home_win * (prob_over15/100), 1.65))
+                    combos.append(("1X + Under 3.5", h_or_draw * (prob_under35/100), 1.45))
+                elif away_win > 40:
+                    combos.append(("2 + Over 1.5", away_win * (prob_over15/100), 1.85))
+                    combos.append(("X2 + Over 1.5", a_or_draw * (prob_over15/100), 1.50))
+                else:
+                    combos.append(("1X + Over 1.5", h_or_draw * (prob_over15/100), 1.40))
+                    
+            if prob_gg > 55 and not any("Goal" in c[0] for c in combos):
+                combos.append(("Goal + Over 2.5", prob_gg * (prob_over25/100), 2.10))
+            
+            best_combo = max(combos, key=lambda x: x[1]) if combos else ("1X + Over 1.5", 70.0, 1.45)
+
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            # --- BOX SPECIALE: LA COMBO CONSIGLIATA ---
+            st.markdown(f"""
+                <div class="combo-box">
+                    <div style="font-size: 1.2rem; font-weight: 800; color: #34d399; margin-bottom: 5px;">🔥 LA COMBO CONSIGLIATA DALL'AI</div>
+                    <div style="font-size: 1.4rem; font-weight: bold; color: #ffffff; margin-bottom: 10px;">{best_combo[0]} <span style="font-size: 1rem; color: #38bdf8; float: right;">Quota stimata: ~{best_combo[2]}</span></div>
+                    <div style="font-size: 0.9rem; color: #d1d5db;">
+                        Probabilità di successo stimata dal modello: <b>{round(best_combo[1], 1)}%</b>.
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+
+            # --- BOX 1: Schedina & Esiti ---
+            st.markdown(f"""
+                <div class="card-box">
+                    <div class="card-title">📊 1. Pronostici & Mercato: {home_team} vs {away_team}</div>
+                    <div style="display: flex; justify-content: space-between; gap: 20px;">
+                        <div style="flex: 1;">
+                            <div class="metric-item">🎯 <b>1X2 Principale:</b> <span class="highlight">1 ({round(home_win, 1)}%)</span> | X: {round(draw, 1)}% | 2: {round(away_win, 1)}%</div>
+                            <div class="metric-item">🥅 <b>Entrambe a Segno (Goal):</b> <span class="highlight">{round(prob_gg, 1)}%</span></div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div class="metric-item">⚽ <b>Expected Goals (xG):</b> <span class="highlight">{round(home_xg, 2)} — {round(away_xg, 2)}</span></div>
+                            <div class="metric-item">📈 <b>Linea Gol:</b> <span class="highlight">{'OVER 2.5' if prob_over25 > 50 else 'UNDER 2.5'} ({round(prob_over25, 1)}%)</span></div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); font-size: 0.9rem; color: #9ca3af;">
+                        🚩 <b>Angoli stimati:</b> {expected_corners} &nbsp;&nbsp;|&nbsp;&nbsp; 🟨 <b>Cartellini stimati:</b> {expected_cards}
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+
+            # --- SEZIONE RISULTATI ESATTI ---
+            with st.expander("🎯 I 4 Risultati Esatti più Probabili"):
+                score_list = []
                 for h in range(max_goals):
                     for a in range(max_goals):
-                        p = poisson.pmf(h, home_xg) * poisson.pmf(a, away_xg)
-                        
-                        if h == 0 and a == 0:
-                            p *= max(0.0, (1 - home_xg * away_xg * rho))
-                        elif h == 0 and a == 1:
-                            p *= max(0.0, (1 + home_xg * rho))
-                        elif h == 1 and a == 0:
-                            p *= max(0.0, (1 + away_xg * rho))
-                        elif h == 1 and a == 1:
-                            p *= max(0.0, (1 - rho))
-                            
-                        p = max(0.0, p)
-                        prob_matrix[h, a] = p
-                        
-                        if (h + a) > 1.5: prob_over15 += p
-                        if (h + a) > 2.5: prob_over25 += p
-                        if (h + a) < 3.5: prob_under35 += p
-                        if h > 0 and a > 0: prob_gg += p
-
-                total_sum = np.sum(prob_matrix)
-                if total_sum > 0:
-                    prob_matrix /= total_sum
-
-                home_win = float(np.sum(np.tril(prob_matrix, -1))) * 100
-                draw = float(np.sum(np.diag(prob_matrix))) * 100
-                away_win = float(np.sum(np.triu(prob_matrix, 1))) * 100
-                h_or_draw = home_win + draw
-                a_or_draw = away_win + draw
-
-                prob_over15 *= 100
-                prob_over25 *= 100
-                prob_under35 *= 100
-                prob_gg *= 100
-
-                expected_corners = round((h_data["avg_corners"] + a_data["avg_corners"]) * 0.95, 1)
-                expected_cards = round((h_data["avg_cards"] + a_data["avg_cards"]) * 0.9, 1)
-
-                combos = []
-                if abs(home_win - away_win) < 15.0 or (home_win < 45 and away_win < 40):
-                    combos.append(("1X + Under 3.5", h_or_draw * (prob_under35/100), 1.45))
-                    combos.append(("1X + Over 1.5", h_or_draw * (prob_over15/100), 1.50))
-                    combos.append(("X2 + Over 1.5", a_or_draw * (prob_over15/100), 1.60))
-                    if prob_gg > 50:
-                        combos.append(("1X + Goal", h_or_draw * (prob_gg/100), 1.85))
-                else:
-                    if home_win > 45:
-                        combos.append(("1 + Over 1.5", home_win * (prob_over15/100), 1.65))
-                        combos.append(("1X + Under 3.5", h_or_draw * (prob_under35/100), 1.45))
-                    elif away_win > 40:
-                        combos.append(("2 + Over 1.5", away_win * (prob_over15/100), 1.85))
-                        combos.append(("X2 + Over 1.5", a_or_draw * (prob_over15/100), 1.50))
-                    else:
-                        combos.append(("1X + Over 1.5", h_or_draw * (prob_over15/100), 1.40))
-                        
-                if prob_gg > 55 and not any("Goal" in c[0] for c in combos):
-                    combos.append(("Goal + Over 2.5", prob_gg * (prob_over25/100), 2.10))
+                        score_list.append((f"{h} - {a}", prob_matrix[h, a] * 100))
                 
-                best_combo = max(combos, key=lambda x: x[1]) if combos else ("1X + Over 1.5", 70.0, 1.45)
-
-                st.markdown("<br>", unsafe_allow_html=True)
-                st.markdown(f"""
-                    <div class="combo-box">
-                        <div style="font-size: 1.2rem; font-weight: 800; color: #34d399; margin-bottom: 5px;">🔥 LA COMBO CONSIGLIATA DALL'AI</div>
-                        <div style="font-size: 1.4rem; font-weight: bold; color: #ffffff; margin-bottom: 10px;">{best_combo[0]} <span style="font-size: 1rem; color: #38bdf8; float: right;">Quota stimata: ~{best_combo[2]}</span></div>
-                        <div style="font-size: 0.9rem; color: #d1d5db;">
-                            Probabilità di successo stimata dal modello: <b>{round(best_combo[1], 1)}%</b>.
-                        </div>
-                    </div>
-                """, unsafe_allow_html=True)
-
-                st.markdown(f"""
-                    <div class="card-box">
-                        <div class="card-title">📊 1. Pronostici & Mercato: {home_team} vs {away_team}</div>
-                        <div style="display: flex; justify-content: space-between; gap: 20px;">
-                            <div style="flex: 1;">
-                                <div class="metric-item">🎯 <b>1X2 Principale:</b> <span class="highlight">1 ({round(home_win, 1)}%)</span> | X: {round(draw, 1)}% | 2: {round(away_win, 1)}%</div>
-                                <div class="metric-item">🥅 <b>Entrambe a Segno (Goal):</b> <span class="highlight">{round(prob_gg, 1)}%</span></div>
+                score_list.sort(key=lambda x: x[1], reverse=True)
+                top_scores = score_list[:4]
+                
+                sc_cols = st.columns(4)
+                for idx, (sc_val, sc_prob) in enumerate(top_scores):
+                    with sc_cols[idx]:
+                        st.markdown(f"""
+                            <div style="background: rgba(17, 24, 39, 0.7); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 12px; text-align: center;">
+                                <div style="font-size: 1.2rem; font-weight: bold; color: #38bdf8;">{sc_val}</div>
+                                <div style="font-size: 0.85rem; color: #34d399; margin-top: 4px;">{round(sc_prob, 1)}%</div>
                             </div>
-                            <div style="flex: 1;">
-                                <div class="metric-item">⚽ <b>Expected Goals (xG):</b> <span class="highlight">{round(home_xg, 2)} — {round(away_xg, 2)}</span></div>
-                                <div class="metric-item">📈 <b>Linea Gol:</b> <span class="highlight">{'OVER 2.5' if prob_over25 > 50 else 'UNDER 2.5'} ({round(prob_over25, 1)}%)</span></div>
-                            </div>
-                        </div>
-                        <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); font-size: 0.9rem; color: #9ca3af;">
-                            🚩 <b>Angoli stimati:</b> {expected_corners} &nbsp;&nbsp;|&nbsp;&nbsp; 🟨 <b>Cartellini stimati:</b> {expected_cards}
-                        </div>
-                    </div>
-                """, unsafe_allow_html=True)
+                        """, unsafe_allow_html=True)
 
-with tab_multi:
-    st.markdown("### 🎟️ Schedina Multipla Automatica")
-    st.markdown("Seleziona il campionato per generare automaticamente le migliori giocate combinate per tutte le squadre in un colpo solo.")
-    
-    league_multi_name = st.selectbox("Seleziona Campionato", list(leagues_map.keys()), key="multi_league")
-    multi_code = leagues_map[league_multi_name]
-    db_multi = get_advanced_database(multi_code)
-    
-    if not db_multi:
-        st.warning("⚠️ Impossibile caricare i dati per la schedina multipla.")
-    else:
-        teams_multi_list = sorted(list(db_multi.keys()))
-        
-        if st.button("🎲 Genera Schedina Automatica", type="primary", use_container_width=True):
-            st.markdown("---")
-            st.markdown("#### 🔥 Schedina Multipla Generata dall'AI")
-            
-            # Generazione automatica accoppiando le squadre in sequenza
-            generated_matches = []
-            for i in range(0, len(teams_multi_list) - 1, 2):
-                h_name = teams_multi_list[i]
-                a_name = teams_multi_list[i+1]
-                
-                h_d = db_multi.get(h_name, {"home_gf": 1.2, "home_ga": 1.0, "form_mult": 1.0})
-                a_d = db_multi.get(a_name, {"away_gf": 1.1, "away_ga": 1.1, "form_mult": 1.0})
-                
-                h_power = (h_d["home_gf"] + a_d["away_ga"]) / 2
-                away_power = (a_d["away_gf"] + h_d["home_ga"]) / 2
-                
-                h_xg = max(0.3, h_power * h_d["form_mult"] * 1.12)
-                a_xg = max(0.3, away_power * a_d["form_mult"] * 0.92)
-                
-                # Calcolo semplificato 1X2 per assegnare la combo automatica
-                h_win_est = 45.0 if h_xg > a_xg else 30.0
-                market_auto = "1X + Over 1.5" if h_xg >= a_xg else "X2 + Over 1.5"
-                
-                st.markdown(f"""
-                    <div class="card-box">
-                        <div style="font-size: 1rem; font-weight: bold; color: #38bdf8;">{h_name} vs {a_name}</div>
-                        <div class="metric-item">Giocata consigliata: <span class="highlight">{market_auto}</span></div>
-                        <div class="metric-item" style="font-size: 0.85rem; color: #9ca3af;">xG Stimati: {round(h_xg, 2)} - {round(a_xg, 2)}</div>
+            # --- BOX 2: Metriche di Squadra e Forma ---
+            st.markdown(f"""
+                <div class="card-box">
+                    <div class="card-title">📈 2. Trend & Metriche Avanzate a Confronto</div>
+                    <div style="display: flex; justify-content: space-between; gap: 20px;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; color: #38bdf8; margin-bottom: 8px;">🏠 {home_team}</div>
+                            <div class="metric-item">• Win Rate: <b>{h_data['win_rate']}%</b></div>
+                            <div class="metric-item">• Clean Sheet: <b>{h_data['clean_sheets_prob']}%</b></div>
+                            <div class="metric-item">• Forma: <span style="font-family: monospace; color: #34d399;">{h_data['form_sequence']}</span></div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; color: #818cf8; margin-bottom: 8px;">✈️ {away_team}</div>
+                            <div class="metric-item">• Win Rate: <b>{a_data['win_rate']}%</b></div>
+                            <div class="metric-item">• Clean Sheet: <b>{a_data['clean_sheets_prob']}%</b></div>
+                            <div class="metric-item">• Forma: <span style="font-family: monospace; color: #34d399;">{a_data['form_sequence']}</span></div>
+                        </div>
                     </div>
-                """, unsafe_allow_html=True)
+                </div>
+            """, unsafe_allow_html=True)
+
+            # --- SEZIONE MARCATORI ---
+            with st.expander("⚽ Probabilità Goal Marcatori Chiave"):
+                m_col1, m_col2 = st.columns(2)
+                weights = [0.38, 0.28, 0.20, 0.14]
+                
+                with m_col1:
+                    st.markdown(f"**{home_team}**")
+                    for idx, player in enumerate(h_data["strikers"]):
+                        p_score = min(round(weights[idx] * (home_xg / 1.35) * 100, 1), 85.0)
+                        st.text(f"{player} ({p_score}%)")
+                        st.progress(p_score / 100)
+                        
+                with m_col2:
+                    st.markdown(f"**{away_team}**")
+                    for idx, player in enumerate(a_data["strikers"]):
+                        p_score = min(round(weights[idx] * (away_xg / 1.05) * 100, 1), 85.0)
+                        st.text(f"{player} ({p_score}%)")
+                        st.progress(p_score / 100)
