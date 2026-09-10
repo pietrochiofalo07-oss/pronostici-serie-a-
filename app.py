@@ -116,7 +116,7 @@ def get_advanced_database(competition_code):
                 "strikers": KNOWN_PLAYERS.get(team_name, ["Attaccante 1", "Rigorista", "Trequartista", "Esterno"])
             }
         return teams_data
-    except Exception as e:
+    except Exception:
         return {}
 
 leagues_map = {
@@ -191,26 +191,26 @@ st.markdown("""
 st.markdown('<div class="main-title">⚡ EUROPE AI PREDICTOR PRO</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">Modello Matematico Avanzato & Smart Combo Finder</div>', unsafe_allow_html=True)
 
-# --- SELETTORE MODALITÀ (SEZIONE DIVISA) ---
-app_mode = st.radio("Seleziona Sezione", ["🔍 Analisi Singolo Match", "📝 Schedina Multipla (Seleziona Squadre)"], horizontal=True)
+# --- NAVIGAZIONE A TAB (SEPARAZIONE SINGOLA PARTITA VS SCHEDINA MULTIPLA) ---
+tab_single, tab_multi = st.tabs(["🔍 Analisi Singola Partita", "🎟️ Crea Schedina Multipla"])
 
-col_sel1, col_sel2, col_sel3 = st.columns(3)
-with col_sel1:
-    league_name = st.selectbox("Campionato / Coppa", list(leagues_map.keys()))
-    competition_code = leagues_map[league_name]
+with tab_single:
+    col_sel1, col_sel2, col_sel3 = st.columns(3)
+    with col_sel1:
+        league_name = st.selectbox("Campionato / Coppa", list(leagues_map.keys()), key="single_league")
+        competition_code = leagues_map[league_name]
 
-FOOTBALL_DATABASE = get_advanced_database(competition_code)
+    FOOTBALL_DATABASE = get_advanced_database(competition_code)
 
-if not FOOTBALL_DATABASE:
-    st.warning("⚠️ Impossibile caricare i dati per questa competizione (potrebbe essere tra una fase e l'altra o non disporre di classifica attiva al momento). Prova un campionato nazionale o verifica la connessione.")
-else:
-    teams_list = sorted(list(FOOTBALL_DATABASE.keys()))
+    if not FOOTBALL_DATABASE:
+        st.warning("⚠️ Impossibile caricare i dati per questa competizione.")
+    else:
+        teams_list = sorted(list(FOOTBALL_DATABASE.keys()))
 
-    if app_mode == "🔍 Analisi Singolo Match":
         with col_sel2:
-            home_team = st.selectbox("Casa", teams_list, index=0)
+            home_team = st.selectbox("Casa", teams_list, index=0, key="single_home")
         with col_sel3:
-            away_team = st.selectbox("Ospite", teams_list, index=1 if len(teams_list) > 1 else 0)
+            away_team = st.selectbox("Ospite", teams_list, index=1 if len(teams_list) > 1 else 0, key="single_away")
 
         if home_team == away_team:
             st.warning("⚠️ Seleziona due squadre diverse.")
@@ -270,9 +270,7 @@ else:
                 expected_corners = round((h_data["avg_corners"] + a_data["avg_corners"]) * 0.95, 1)
                 expected_cards = round((h_data["avg_cards"] + a_data["avg_cards"]) * 0.9, 1)
 
-                # --- MOTORE DI SCELTA SMART COMBO ---
                 combos = []
-                
                 if abs(home_win - away_win) < 15.0 or (home_win < 45 and away_win < 40):
                     combos.append(("1X + Under 3.5", h_or_draw * (prob_under35/100), 1.45))
                     combos.append(("1X + Over 1.5", h_or_draw * (prob_over15/100), 1.50))
@@ -295,8 +293,6 @@ else:
                 best_combo = max(combos, key=lambda x: x[1]) if combos else ("1X + Over 1.5", 70.0, 1.45)
 
                 st.markdown("<br>", unsafe_allow_html=True)
-                
-                # --- BOX SPECIALE: LA COMBO CONSIGLIATA ---
                 st.markdown(f"""
                     <div class="combo-box">
                         <div style="font-size: 1.2rem; font-weight: 800; color: #34d399; margin-bottom: 5px;">🔥 LA COMBO CONSIGLIATA DALL'AI</div>
@@ -307,7 +303,6 @@ else:
                     </div>
                 """, unsafe_allow_html=True)
 
-                # --- BOX 1: Schedina & Esiti ---
                 st.markdown(f"""
                     <div class="card-box">
                         <div class="card-title">📊 1. Pronostici & Mercato: {home_team} vs {away_team}</div>
@@ -327,141 +322,69 @@ else:
                     </div>
                 """, unsafe_allow_html=True)
 
-                # --- SEZIONE RISULTATI ESATTI ---
-                with st.expander("🎯 I 4 Risultati Esatti più Probabili"):
-                    score_list = []
-                    for h in range(max_goals):
-                        for a in range(max_goals):
-                            score_list.append((f"{h} - {a}", prob_matrix[h, a] * 100))
-                    
-                    score_list.sort(key=lambda x: x[1], reverse=True)
-                    top_scores = score_list[:4]
-                    
-                    sc_cols = st.columns(4)
-                    for idx, (sc_val, sc_prob) in enumerate(top_scores):
-                        with sc_cols[idx]:
-                            st.markdown(f"""
-                                <div style="background: rgba(17, 24, 39, 0.7); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 12px; text-align: center;">
-                                    <div style="font-size: 1.2rem; font-weight: bold; color: #38bdf8;">{sc_val}</div>
-                                    <div style="font-size: 0.85rem; color: #34d399; margin-top: 4px;">{round(sc_prob, 1)}%</div>
-                                </div>
-                            """, unsafe_allow_html=True)
-
-                # --- BOX 2: Metriche di Squadra e Forma ---
-                st.markdown(f"""
-                    <div class="card-box">
-                        <div class="card-title">📈 2. Trend & Metriche Avanzate a Confronto</div>
-                        <div style="display: flex; justify-content: space-between; gap: 20px;">
-                            <div style="flex: 1;">
-                                <div style="font-weight: 600; color: #38bdf8; margin-bottom: 8px;">🏠 {home_team}</div>
-                                <div class="metric-item">• Win Rate: <b>{h_data['win_rate']}%</b></div>
-                                <div class="metric-item">• Clean Sheet: <b>{h_data['clean_sheets_prob']}%</b></div>
-                                <div class="metric-item">• Forma: <span style="font-family: monospace; color: #34d399;">{h_data['form_sequence']}</span></div>
-                            </div>
-                            <div style="flex: 1;">
-                                <div style="font-weight: 600; color: #818cf8; margin-bottom: 8px;">✈️ {away_team}</div>
-                                <div class="metric-item">• Win Rate: <b>{a_data['win_rate']}%</b></div>
-                                <div class="metric-item">• Clean Sheet: <b>{a_data['clean_sheets_prob']}%</b></div>
-                                <div class="metric-item">• Forma: <span style="font-family: monospace; color: #34d399;">{a_data['form_sequence']}</span></div>
-                            </div>
-                        </div>
-                    </div>
-                """, unsafe_allow_html=True)
-
-                # --- SEZIONE MARCATORI ---
-                with st.expander("⚽ Probabilità Goal Marcatori Chiave"):
-                    m_col1, m_col2 = st.columns(2)
-                    weights = [0.38, 0.28, 0.20, 0.14]
-                    
-                    with m_col1:
-                        st.markdown(f"**{home_team}**")
-                        for idx, player in enumerate(h_data["strikers"]):
-                            p_score = min(round(weights[idx] * (home_xg / 1.35) * 100, 1), 85.0)
-                            st.text(f"{player} ({p_score}%)")
-                            st.progress(p_score / 100)
-                            
-                    with m_col2:
-                        st.markdown(f"**{away_team}**")
-                        for idx, player in enumerate(a_data["strikers"]):
-                            p_score = min(round(weights[idx] * (away_xg / 1.05) * 100, 1), 85.0)
-                            st.text(f"{player} ({p_score}%)")
-                            st.progress(p_score / 100)
-
+with tab_multi:
+    st.markdown("### 🎟️ Generatore Schedina Multipla")
+    st.markdown("Aggiungi più partite per creare la tua schedina cumulativa.")
+    
+    league_multi_name = st.selectbox("Seleziona Campionato di riferimento", list(leagues_map.keys()), key="multi_league")
+    multi_code = leagues_map[league_multi_name]
+    db_multi = get_advanced_database(multi_code)
+    
+    if not db_multi:
+        st.warning("⚠️ Impossibile caricare i dati per la schedina multipla.")
     else:
-        # --- SEZIONE SEPARATA: SCHEDINA MULTIPLA TRAMITE SELEZIONE SQUADRE ---
-        st.markdown("---")
-        st.markdown("### 📝 Componi la Schedina Multipla")
-        st.markdown("Seleziona le squadre dai menù a tendina e aggiungile alla lista della tua schedina.")
-
-        # Inizializza la lista delle partite salvate nella sessione se non esiste
-        if "multi_matches" not in st.session_state:
-            st.session_state.multi_matches = []
-
-        m_col_home, m_col_away = st.columns(2)
-        with m_col_home:
-            multi_home = st.selectbox("Squadra in Casa", teams_list, key="m_home")
-        with m_col_away:
-            multi_away = st.selectbox("Squadra Ospite", teams_list, index=1 if len(teams_list) > 1 else 0, key="m_away")
-
-        col_add, col_clear = st.columns([3, 1])
-        with col_add:
-            if st.button("➕ Aggiungi Partita alla Schedina", use_container_width=True):
-                if multi_home == multi_away:
-                    st.error("⚠️ La squadra di casa e quella ospite non possono essere uguali.")
-                else:
-                    match_tuple = (multi_home, multi_away)
-                    if match_tuple not in st.session_state.multi_matches:
-                        st.session_state.multi_matches.append(match_tuple)
-                        st.success(f"Aggiunta: {multi_home} vs {multi_away}")
-                    else:
-                        st.warning("⚠️ Questa partita è già presente nella lista.")
-        with col_clear:
-            if st.button("🗑️ Svuota Lista", use_container_width=True):
-                st.session_state.multi_matches = []
-                st.rerun()
-
-        # Mostra le partite attualmente inserite
-        if st.session_state.multi_matches:
-            st.markdown("---")
-            st.markdown(f"### 📋 Partite Selezionate ({len(st.session_state.multi_matches)})")
+        teams_multi_list = sorted(list(db_multi.keys()))
+        
+        if "matches_list" not in st.session_state:
+            st.session_state.matches_list = []
             
-            for idx, (h_team, a_team) in enumerate(st.session_state.multi_matches, 1):
-                col_txt, col_del = st.columns([5, 1])
-                with col_txt:
-                    st.markdown(f"**{idx}.** {h_team} vs {a_team}")
-                with col_del:
+        col_m1, col_m2, col_m3 = st.columns(3)
+        with col_m1:
+            m_home = st.selectbox("Squadra Casa", teams_multi_list, key="m_home")
+        with col_m2:
+            m_away = st.selectbox("Squadra Ospite", teams_multi_list, key="m_away")
+        with col_m3:
+            m_market = st.selectbox("Mercato", ["1X2 (1)", "1X2 (X)", "1X2 (2)", "1X", "X2", "Over 1.5", "Over 2.5", "Goal"], key="m_market")
+            
+        if st.button("➕ Aggiungi Partita alla Schedina"):
+            if m_home == m_away:
+                st.error("Le squadre devono essere differenti.")
+            else:
+                st.session_state.matches_list.append({"home": m_home, "away": m_away, "market": m_market})
+                st.success(f"Aggiunta: {m_home} vs {m_away} ({m_market})")
+                
+        if st.session_state.matches_list:
+            st.markdown("---")
+            st.markdown("#### Partite Inserite in Schedina:")
+            tot_estimated_quota = 1.0
+            for idx, match in enumerate(st.session_state.matches_list):
+                col_del1, col_del2 = st.columns([4, 1])
+                with col_del1:
+                    st.text(f"{idx+1}. {match['home']} vs {match['away']} ➔ {match['market']}")
+                with col_del2:
                     if st.button("❌ Rimuovi", key=f"del_{idx}"):
-                        st.session_state.multi_matches.pop(idx - 1)
+                        st.session_state.matches_list.pop(idx)
                         st.rerun()
-
-            if st.button("🎲 Calcola Schedina Multipla Completa", type="primary", use_container_width=True):
-                st.markdown("---")
-                st.markdown("### 🔥 Risultati & Pronostici Schedina Multipla")
-                
-                total_combo_odd_estim = 1.0
-                
-                for idx, (h_team, a_team) in enumerate(st.session_state.multi_matches, 1):
-                    h_data = FOOTBALL_DATABASE[h_team]
-                    a_data = FOOTBALL_DATABASE[a_team]
+                        
+            if st.session_state.matches_list and st.button("🎲 Calcola Schedina Multipla Completa", type="primary"):
+                st.markdown("#### 🔥 Risultati & Pronostici Schedina Multipla")
+                for match in st.session_state.matches_list:
+                    h_name = match['home']
+                    a_name = match['away']
                     
-                    h_xg = max(0.3, ((h_data["home_gf"] + a_data["away_ga"]) / 2) * h_data["form_mult"] * 1.12)
-                    a_xg = max(0.3, ((a_data["away_gf"] + h_data["home_ga"]) / 2) * a_data["form_mult"] * 0.92)
+                    # Protezione contro KeyError tramite .get() sicuro
+                    h_d = db_multi.get(h_name, {"home_gf": 1.2, "home_ga": 1.0, "form_mult": 1.0, "avg_corners": 4.0, "avg_cards": 2.0, "strikers": ["Giocatore 1"]})
+                    a_d = db_multi.get(a_name, {"away_gf": 1.1, "away_ga": 1.1, "form_mult": 1.0, "avg_corners": 4.0, "avg_cards": 2.0, "strikers": ["Giocatore 1"]})
                     
-                    pick = "1X + Over 1.5" if h_xg >= a_xg else "X2 + Over 1.5"
-                    est_odd = 1.45
-                    total_combo_odd_estim *= est_odd
+                    h_xg = max(0.3, ((h_d["home_gf"] + a_d["away_ga"]) / 2) * h_d["form_mult"])
+                    a_xg = max(0.3, ((a_d["away_gf"] + h_d["home_ga"]) / 2) * a_d["form_mult"])
                     
                     st.markdown(f"""
-                        <div class="card-box" style="padding: 12px; margin-bottom: 8px;">
-                            <b>{idx}. {h_team} vs {a_team}</b><br>
-                            <span style="color: #34d399;">Consiglio AI: <b>{pick}</b></span> &nbsp;|&nbsp; <span style="color: #38bdf8;">Quota stimata: ~{est_odd}</span>
+                        <div class="card-box">
+                            <div style="font-size: 1rem; font-weight: bold; color: #38bdf8;">{h_name} vs {a_name}</div>
+                            <div class="metric-item">Puntata selezionata: <span class="highlight">{match['market']}</span></div>
+                            <div class="metric-item">xG Stimati: {round(h_xg, 2)} - {round(a_xg, 2)}</div>
                         </div>
                     """, unsafe_allow_html=True)
-                
-                st.markdown(f"""
-                    <div class="combo-box" style="text-align: center; margin-top: 20px;">
-                        <div style="font-size: 1.1rem; font-weight: bold;">📊 Quota Totale Stimata Schedina: ~{round(total_combo_odd_estim, 2)}</div>
-                    </div>
-                """, unsafe_allow_html=True)
         else:
-            st.info("💡 Aggiungi almeno una partita usando i menù sopra per generare la schedina multipla.")
+            st.info("Nessuna partita aggiunta alla schedina. Utilizza i menu sopra per comporla.")
