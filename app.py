@@ -191,8 +191,8 @@ st.markdown("""
 st.markdown('<div class="main-title">⚡ EUROPE AI PREDICTOR PRO</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">Modello Matematico Avanzato & Smart Combo Finder</div>', unsafe_allow_html=True)
 
-# --- NAVIGAZIONE A TAB (SEPARAZIONE SINGOLA PARTITA VS SCHEDINA MULTIPLA) ---
-tab_single, tab_multi = st.tabs(["🔍 Analisi Singola Partita", "🎟️ Crea Schedina Multipla"])
+# --- NAVIGAZIONE A TAB ---
+tab_single, tab_multi = st.tabs(["🔍 Analisi Singola Partita", "🎟️ Schedina Multipla Automatica"])
 
 with tab_single:
     col_sel1, col_sel2, col_sel3 = st.columns(3)
@@ -323,10 +323,10 @@ with tab_single:
                 """, unsafe_allow_html=True)
 
 with tab_multi:
-    st.markdown("### 🎟️ Generatore Schedina Multipla")
-    st.markdown("Aggiungi più partite per creare la tua schedina cumulativa.")
+    st.markdown("### 🎟️ Schedina Multipla Automatica")
+    st.markdown("Seleziona il campionato per generare automaticamente le migliori giocate combinate per tutte le squadre in un colpo solo.")
     
-    league_multi_name = st.selectbox("Seleziona Campionato di riferimento", list(leagues_map.keys()), key="multi_league")
+    league_multi_name = st.selectbox("Seleziona Campionato", list(leagues_map.keys()), key="multi_league")
     multi_code = leagues_map[league_multi_name]
     db_multi = get_advanced_database(multi_code)
     
@@ -335,56 +335,33 @@ with tab_multi:
     else:
         teams_multi_list = sorted(list(db_multi.keys()))
         
-        if "matches_list" not in st.session_state:
-            st.session_state.matches_list = []
-            
-        col_m1, col_m2, col_m3 = st.columns(3)
-        with col_m1:
-            m_home = st.selectbox("Squadra Casa", teams_multi_list, key="m_home")
-        with col_m2:
-            m_away = st.selectbox("Squadra Ospite", teams_multi_list, key="m_away")
-        with col_m3:
-            m_market = st.selectbox("Mercato", ["1X2 (1)", "1X2 (X)", "1X2 (2)", "1X", "X2", "Over 1.5", "Over 2.5", "Goal"], key="m_market")
-            
-        if st.button("➕ Aggiungi Partita alla Schedina"):
-            if m_home == m_away:
-                st.error("Le squadre devono essere differenti.")
-            else:
-                st.session_state.matches_list.append({"home": m_home, "away": m_away, "market": m_market})
-                st.success(f"Aggiunta: {m_home} vs {m_away} ({m_market})")
-                
-        if st.session_state.matches_list:
+        if st.button("🎲 Genera Schedina Automatica", type="primary", use_container_width=True):
             st.markdown("---")
-            st.markdown("#### Partite Inserite in Schedina:")
-            tot_estimated_quota = 1.0
-            for idx, match in enumerate(st.session_state.matches_list):
-                col_del1, col_del2 = st.columns([4, 1])
-                with col_del1:
-                    st.text(f"{idx+1}. {match['home']} vs {match['away']} ➔ {match['market']}")
-                with col_del2:
-                    if st.button("❌ Rimuovi", key=f"del_{idx}"):
-                        st.session_state.matches_list.pop(idx)
-                        st.rerun()
-                        
-            if st.session_state.matches_list and st.button("🎲 Calcola Schedina Multipla Completa", type="primary"):
-                st.markdown("#### 🔥 Risultati & Pronostici Schedina Multipla")
-                for match in st.session_state.matches_list:
-                    h_name = match['home']
-                    a_name = match['away']
-                    
-                    # Protezione contro KeyError tramite .get() sicuro
-                    h_d = db_multi.get(h_name, {"home_gf": 1.2, "home_ga": 1.0, "form_mult": 1.0, "avg_corners": 4.0, "avg_cards": 2.0, "strikers": ["Giocatore 1"]})
-                    a_d = db_multi.get(a_name, {"away_gf": 1.1, "away_ga": 1.1, "form_mult": 1.0, "avg_corners": 4.0, "avg_cards": 2.0, "strikers": ["Giocatore 1"]})
-                    
-                    h_xg = max(0.3, ((h_d["home_gf"] + a_d["away_ga"]) / 2) * h_d["form_mult"])
-                    a_xg = max(0.3, ((a_d["away_gf"] + h_d["home_ga"]) / 2) * a_d["form_mult"])
-                    
-                    st.markdown(f"""
-                        <div class="card-box">
-                            <div style="font-size: 1rem; font-weight: bold; color: #38bdf8;">{h_name} vs {a_name}</div>
-                            <div class="metric-item">Puntata selezionata: <span class="highlight">{match['market']}</span></div>
-                            <div class="metric-item">xG Stimati: {round(h_xg, 2)} - {round(a_xg, 2)}</div>
-                        </div>
-                    """, unsafe_allow_html=True)
-        else:
-            st.info("Nessuna partita aggiunta alla schedina. Utilizza i menu sopra per comporla.")
+            st.markdown("#### 🔥 Schedina Multipla Generata dall'AI")
+            
+            # Generazione automatica accoppiando le squadre in sequenza
+            generated_matches = []
+            for i in range(0, len(teams_multi_list) - 1, 2):
+                h_name = teams_multi_list[i]
+                a_name = teams_multi_list[i+1]
+                
+                h_d = db_multi.get(h_name, {"home_gf": 1.2, "home_ga": 1.0, "form_mult": 1.0})
+                a_d = db_multi.get(a_name, {"away_gf": 1.1, "away_ga": 1.1, "form_mult": 1.0})
+                
+                h_power = (h_d["home_gf"] + a_d["away_ga"]) / 2
+                away_power = (a_d["away_gf"] + h_d["home_ga"]) / 2
+                
+                h_xg = max(0.3, h_power * h_d["form_mult"] * 1.12)
+                a_xg = max(0.3, away_power * a_d["form_mult"] * 0.92)
+                
+                # Calcolo semplificato 1X2 per assegnare la combo automatica
+                h_win_est = 45.0 if h_xg > a_xg else 30.0
+                market_auto = "1X + Over 1.5" if h_xg >= a_xg else "X2 + Over 1.5"
+                
+                st.markdown(f"""
+                    <div class="card-box">
+                        <div style="font-size: 1rem; font-weight: bold; color: #38bdf8;">{h_name} vs {a_name}</div>
+                        <div class="metric-item">Giocata consigliata: <span class="highlight">{market_auto}</span></div>
+                        <div class="metric-item" style="font-size: 0.85rem; color: #9ca3af;">xG Stimati: {round(h_xg, 2)} - {round(a_xg, 2)}</div>
+                    </div>
+                """, unsafe_allow_html=True)
